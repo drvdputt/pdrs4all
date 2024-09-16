@@ -93,7 +93,7 @@ use it, the following is needed:
 The command is then for example
 
 ```
-python pdr_reduction/extract_templates.py my_regions.reg nirspec/stage3/*s3d.fits miri/stage3/*s3d.fits --template_names Atomic DF
+python pdrs4all/extract_templates.py my_regions.reg nirspec/stage3/*s3d.fits miri/stage3/*s3d.fits --template_names Atomic DF
 ```
 
 where the number of arguments for the optional `--template_names` should equal

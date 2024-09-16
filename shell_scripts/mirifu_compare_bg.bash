@@ -58,7 +58,7 @@ OUT_BKG=$HERE/$OUT_PFX/background
 # -- run the pipeline --
 # ______________________
 
-# the commands below assume that the pdr_reduction python package is installed
+# the commands below assume that the pdrs4all python package is installed
 
 # background (need up to stage 2)
 pipeline -j $J -s 12 -o $OUT_BKG $IN_BKG
