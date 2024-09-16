@@ -96,6 +96,41 @@ pipeline -j $J -s 1 -o $OUT_SCI $IN_SCI
 mv strun_calwebb_detector1_jobs.sh jobs_sci_1.sh
 parallel_shorthand $J sci_1
 
+# -- reduction without NSClean --
+# _______________________________
+
+# background stage 2 needs imprints with -i
+# pipeline -s 2 -o $OUT_BKG $IN_BKG
+# mv strun_calwebb_spec2_jobs.sh jobs_bkg_2.sh
+# parallel -j $J {} ">>"log_bkg_2_cpu{%} '2>&1' :::: jobs_bkg_2.sh
+
+# science stage 2 needs imprints with -i
+# python $SCRIPT -j $J -s 2 -i $OUT_SCII -o $OUT_SCI $IN_SCI
+# science stage 3 needs background (if doing master background subtraction). For image-to-image
+# background subtraction, use the -b option in stage 2 instead.
+# python $SCRIPT -j $JJ -s 3 --mosaic -b $OUT_BKG -o $OUT_SCI $IN_SCI
+
+# background stage 3 if interested
+# pipeline -j $JJ -s 3 -o $OUT_BKG $IN_BKG
+
+# -- reduction with NSClean --
+# ____________________________
+
+# Apply NSClean (1/f noise correction) to the stage 1 data, and run stage 2 and 3 again. Similar
+# subdirectories need to be made.
+OUT_PFX_NSC=${OUT_PFX}_nsclean
+OUT_SCI_NSC=$HERE/$OUT_PFX_NSC/science
+OUT_SCII_NSC=$HERE/$OUT_PFX_NSC/science_imprint
+OUT_BKG_NSC=$HERE/$OUT_PFX_NSC/background
+OUT_BKGI_NSC=$HERE/$OUT_PFX_NSC/background_imprint
+
+parallel -j $J nsclean_run {} $OUT_BKG_NSC/stage1/{/} ::: $OUT_BKG/stage1/*rate.fits
+parallel -j $J nsclean_run {} $OUT_BKGI_NSC/stage1/{/} ::: $OUT_BKGI/stage1/*rate.fits
+parallel -j $J nsclean_run {} $OUT_SCII_NSC/stage1/{/} ::: $OUT_SCII/stage1/*rate.fits
+parallel -j $J nsclean_run {} $OUT_SCI_NSC/stage1/{/} ::: $OUT_SCI/stage1/*rate.fits
+
+# the rest of the steps with the cleaned data
+
 # background stage 2
 pipeline -s 2 -i $OUT_BKGI_NSC -o $OUT_BKG_NSC $IN_BKG
 mv strun_calwebb_spec2_jobs.sh jobs_bkg_2.sh
