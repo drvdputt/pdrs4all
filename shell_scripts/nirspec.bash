@@ -87,12 +87,12 @@ mv strun_calwebb_detector1_jobs.sh jobs_bkg_1.sh
 parallel_shorthand $J bkg_1
 
 # # science imprint
-pipeline -j $J -s 1 -o $OUT_SCII $IN_SCII
+pipeline -s 1 -o $OUT_SCII $IN_SCII
 mv strun_calwebb_detector1_jobs.sh jobs_scii_1.sh
 parallel_shorthand $J scii_1
 
 # # science
-pipeline -j $J -s 1 -o $OUT_SCI $IN_SCI
+pipeline -s 1 -o $OUT_SCI $IN_SCI
 mv strun_calwebb_detector1_jobs.sh jobs_sci_1.sh
 parallel_shorthand $J sci_1
 
