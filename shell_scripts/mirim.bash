@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # -- multiprocessing options --
 # _____________________________
-
+set -e
 # J is the number of processes for stage 1 and 2. The recommended limit, is to make sure you
 # have about 10 GB of RAM per process. For the science cluster at ST, with 512 GB RAM, I use
 # J=48.

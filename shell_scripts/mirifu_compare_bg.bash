@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 # Extended version of the basic mirifu.bash script, which runs with multiple background options
 
 # -- multiprocessing options --
@@ -75,4 +75,3 @@ pipeline -j $JJ -s 3 --mosaic -b $OUT_BKG --intermediate_dir=${OUT_SCI} -o ${OUT
 # stage 2 and 3 using image-to-image background
 pipeline -j $J -s 2 --residual_fringe -b $OUT_BKG --intermediate_dir=${OUT_SCI} -o ${OUT_SCI}_ibg $IN_SCI
 pipeline -j $JJ -s 3 --mosaic --intermediate_dir=${OUT_SCI}_ibg -o ${OUT_SCI}_ibg $IN_SCI
-
