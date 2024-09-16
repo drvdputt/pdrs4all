@@ -55,6 +55,9 @@ def pipeline_class_and_options_dict(stage, instrument, output_dir):
     if instrument == "NRS_IFU":
         if stage == 2:
             class_name = Spec2Pipeline
+            # let's try built-in nsclean with the default mask for now.
+            # To disable nsclean during a run, use --custom_options.
+            options["steps"] = {"nsclean": skipfalse}
         if stage == 3:
             class_name = Spec3Pipeline
             options["steps"] = {
