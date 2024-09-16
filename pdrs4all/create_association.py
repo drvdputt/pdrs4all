@@ -219,7 +219,7 @@ def create_asn_per_filter(
     output_dir="./",
 ):
     asnlist = []
-    for (filter_key, filter_sci) in sortfiles_dict.items():
+    for filter_key, filter_sci in sortfiles_dict.items():
         if len(filter_sci) == 0:
             continue
 

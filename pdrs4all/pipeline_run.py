@@ -3,7 +3,6 @@ from jwst import datamodels
 from crds.config import get_crds_env_context
 from pdrs4all.pipeline_arguments import parse_args
 from pdrs4all import create_association
-from pdrs4all.parallel_tools import run_stage_many
 from pdrs4all.pipeline_settings import (
     pipeline_class_and_options_dict,
     apply_custom_options,
@@ -82,8 +81,6 @@ class InstrumentsPipelines:
                 print("Applying custom settings from", self.custom_options)
                 apply_custom_options(options, self.custom_options)
                 print("Final options are: ", options)
-
-            run_stage_many(max_cores, inputs, pipeline, options)
 
 
 def main():
