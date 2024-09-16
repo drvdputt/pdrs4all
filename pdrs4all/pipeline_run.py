@@ -35,7 +35,6 @@ class InstrumentsPipelines:
             self.out_dir if args.intermediate_dir is None else args.intermediate_dir
         )
         self.per_pointing = not args.mosaic
-        self.residual_fringe = args.residual_fringe
         # NRC_IMAGE, MIR_MRS, MIR_IMAGE
         with datamodels.open(obsfile) as im:
             self.instru = im.meta.exposure.type

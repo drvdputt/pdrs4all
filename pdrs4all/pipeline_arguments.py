@@ -55,20 +55,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-j",
-        "--max_cores",
-        type=int,
-        default=1,
-        help="Number of processes to speed up stage 1 and stage 2. Watch out for memory usage.",
-    )
-
-    parser.add_argument(
-        "--residual_fringe",
-        action="store_true",
-        help="Enable residual fringe correction (stage 2 spectroscopy only)",
-    )
-
-    parser.add_argument(
         "--custom_options",
         type=str,
         help="""JSON file to define extra pipeline options. Should
