@@ -1,0 +1,1 @@
+python ~/Repositories/pdr_reduction/pdr_reduction/extract_templates.py aper_T_DF_extraction.reg ~/BigData/orion/nirspec/1.15.0_1142/science/stage3/*s3d.fits  ~/BigData/orion/mirifu/1.15.0_1252/science/stage3/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1"

@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "pdrs4all"
+version = "0.1.0"
+description = "PDRs4All data reduction and more"
+authors = ["Dries Van De Putte <dvandepu@uwo.ca>"]
+license = "LICENSE"
+readme = "readme.md"
+
+[tool.poetry.dependencies]
+python = ">3.11,<3.13"
+astropy = "^6.0.0"
+crds = ">=11.17.16"
+jwst = "*"
+myastro = {git = "https://github.com/drvdputt/my-astro"}
+regions = ">=0.8"
+specutils = ">=1.13.0"
+pyqt6 = "^6.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+create_association = 'pdrs4all.create_association:main'
+pipeline = 'pdrs4all.pipeline_run:main'
+nsclean_run = 'pdrs4all.nsclean_run:main'
