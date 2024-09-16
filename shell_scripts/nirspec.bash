@@ -70,7 +70,7 @@ python -c 'import crds; print(crds.get_context_name("jwst"))' >> $OUT_LOG/versio
 parallel_shorthand () {
     echo $2
     cp jobs_$2.sh $OUT_LOG/jobs_$2.sh # save the jobs too. Good to know the exact commands
-    parallel --progress -j $1 {} ">>"$OUT_LOG/$2_cpu{%} '2>&1' :::: jobs_$2.sh
+    parallel --joblog $OUT_LOG/$2.joblog --progress -j $1 {} ">>"$OUT_LOG/$2_cpu{%}.log '2>&1' :::: jobs_$2.sh
 }
 
 # -- run the pipeline --
