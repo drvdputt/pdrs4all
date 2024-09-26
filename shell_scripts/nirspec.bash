@@ -71,7 +71,7 @@ python -c 'import crds; print(crds.get_context_name("jwst"))' >> $OUT_LOG/versio
 parallel_shorthand () {
     echo $2
     cp jobs_$2.sh $OUT_LOG/jobs_$2.sh # save the jobs too. Good to know the exact commands
-    parallel --joblog $OUT_LOG/$2.joblog --progress -j $1 {} ">>"$OUT_LOG/$2_cpu{%}.log '2>&1' :::: jobs_$2.sh
+    parallel --retries 3 --retry-failed --joblog $OUT_LOG/$2.joblog --progress -j $1 {} ">>"$OUT_LOG/$2_cpu{%}.log '2>&1' :::: jobs_$2.sh
 }
 
 # -- run the pipeline --
@@ -88,12 +88,12 @@ mv strun_calwebb_detector1_jobs.sh jobs_bkg_1.sh
 parallel_shorthand $J bkg_1
 
 # science imprint
-pipeline -j $J -s 1 -o $OUT_SCII $IN_SCII
+pipeline -s 1 -o $OUT_SCII $IN_SCII
 mv strun_calwebb_detector1_jobs.sh jobs_scii_1.sh
 parallel_shorthand $J scii_1
 
 # science
-pipeline -j $J -s 1 -o $OUT_SCI $IN_SCI
+pipeline -s 1 -o $OUT_SCI $IN_SCI
 mv strun_calwebb_detector1_jobs.sh jobs_sci_1.sh
 parallel_shorthand $J sci_1
 
