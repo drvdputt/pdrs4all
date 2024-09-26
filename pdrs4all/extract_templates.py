@@ -162,7 +162,7 @@ def cube_sky_aperture_extraction_v3(
     nx, ny = cube_spec1d.shape[:2]
 
     pixel_region = sky_region.to_pixel(the_wcs_2d)
-    aperture_mask = pixel_region.to_mask()
+    aperture_mask = pixel_region.to_mask(mode='subpixels', subpixels=20)
 
     slices_large, slices_small = aperture_mask.get_overlap_slices((ny, nx))
     yx_slc = slices_large
@@ -178,6 +178,7 @@ def cube_sky_aperture_extraction_v3(
     cube_cutout = cube_ma_yx[yx_slc]
     cube_cutout_used = np.where(cube_cutout.mask, 0, 1)
 
+    # print("making plot")
     # plt.subplot(311)
     # plt.imshow(aperture_mask.to_image((ny, nx)))
     # plt.subplot(312)
