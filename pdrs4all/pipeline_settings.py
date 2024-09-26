@@ -45,19 +45,21 @@ def pipeline_class_and_options_dict(stage, instrument, output_dir):
     """
     options = default_dict(output_dir)
 
-    if stage == 1:
-        class_name = Detector1Pipeline
-
     # shorthand
     skiptrue = {"skip": True}
     skipfalse = {"skip": False}
+
+    if stage == 1:
+        class_name = Detector1Pipeline
+        if instrument == "NRS_IFU":
+            options["steps"] = {"clean_flicker_noise": skiptrue}
 
     if instrument == "NRS_IFU":
         if stage == 2:
             class_name = Spec2Pipeline
             # let's try built-in nsclean with the default mask for now.
             # To disable nsclean during a run, use --custom_options.
-            options["steps"] = {"nsclean": skipfalse}
+            options["steps"] = {"nsclean": skiptrue}
         if stage == 3:
             class_name = Spec3Pipeline
             options["steps"] = {

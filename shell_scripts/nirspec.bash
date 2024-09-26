@@ -77,7 +77,7 @@ parallel_shorthand () {
 # -- run the pipeline --
 # ______________________
 
-# background imprint (need up to stage 1)
+# background imprint
 pipeline -s 1 -o $OUT_BKGI $IN_BKGI
 mv strun_calwebb_detector1_jobs.sh jobs_bkgi_1.sh
 parallel_shorthand $J bkgi_1
@@ -87,27 +87,45 @@ pipeline -s 1 -o $OUT_BKG $IN_BKG
 mv strun_calwebb_detector1_jobs.sh jobs_bkg_1.sh
 parallel_shorthand $J bkg_1
 
-# background stage 2
-pipeline -s 2 -i $OUT_BKGI -o $OUT_BKG $IN_BKG
-mv strun_calwebb_spec2_jobs.sh jobs_bkg_2.sh
-parallel_shorthand $J bkg_2
-
 # science imprint
-pipeline -s 1 -o $OUT_SCII $IN_SCII
+pipeline -j $J -s 1 -o $OUT_SCII $IN_SCII
 mv strun_calwebb_detector1_jobs.sh jobs_scii_1.sh
 parallel_shorthand $J scii_1
 
 # science
-pipeline -s 1 -o $OUT_SCI $IN_SCI
+pipeline -j $J -s 1 -o $OUT_SCI $IN_SCI
 mv strun_calwebb_detector1_jobs.sh jobs_sci_1.sh
 parallel_shorthand $J sci_1
 
+# -- NSClean --
+# _____________
+
+OUT_PFX_NSC=${OUT_PFX}_nsclean
+OUT_SCI_NSC=$HERE/$OUT_PFX_NSC/science
+OUT_SCII_NSC=$HERE/$OUT_PFX_NSC/science_imprint
+OUT_BKG_NSC=$HERE/$OUT_PFX_NSC/background
+OUT_BKGI_NSC=$HERE/$OUT_PFX_NSC/background_imprint
+
+# nsclean run is a wrapper around nsclean, and should be on the command line PATH when pdrs4all
+# package is pip installed
+parallel -j $J nsclean_run {} $OUT_BKG_NSC/stage1/{/} ::: $OUT_BKG/stage1/*rate.fits
+parallel -j $J nsclean_run {} $OUT_BKGI_NSC/stage1/{/} ::: $OUT_BKGI/stage1/*rate.fits
+parallel -j $J nsclean_run {} $OUT_SCII_NSC/stage1/{/} ::: $OUT_SCII/stage1/*rate.fits
+parallel -j $J nsclean_run {} $OUT_SCI_NSC/stage1/{/} ::: $OUT_SCI/stage1/*rate.fits
+
+# the rest of the steps with the cleaned data
+
+# background stage 2
+pipeline -s 2 -i $OUT_BKGI_NSC -o $OUT_BKG_NSC $IN_BKG
+mv strun_calwebb_spec2_jobs.sh jobs_bkg_2.sh
+parallel_shorthand $J bkg_2
+
 # science stage 2
-pipeline -s 2 -i $OUT_SCII -o $OUT_SCI $IN_SCI
+pipeline -s 2 -i $OUT_SCII_NSC -o $OUT_SCI_NSC $IN_SCI
 mv strun_calwebb_spec2_jobs.sh jobs_sci_2.sh
 parallel_shorthand $J sci_2
 
 # science stage 3
-pipeline -s 3 --mosaic -b $OUT_BKG -o $OUT_SCI $IN_SCI
+pipeline -s 3 --mosaic -b $OUT_BKG_NSC -o $OUT_SCI_NSC $IN_SCI
 mv strun_calwebb_spec3_jobs.sh jobs_sci_3.sh
 parallel_shorthand 1 sci_3
