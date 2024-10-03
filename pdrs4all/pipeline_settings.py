@@ -63,15 +63,19 @@ def pipeline_class_and_options_dict(stage, instrument, output_dir):
         if stage == 3:
             class_name = Spec3Pipeline
             options["steps"] = {
-                "master_background": {"save_background": True, "skip": False},
+                # You can set save_background to True to see what is
+                # actually being subtracted. Disabled by default,
+                # because these files take up a lot of space.
+                "master_background": skipfalse,
                 "outlier_detection": skipfalse,
-                "cube_build": {
-                    "grating": "all",
-                    "filter": "all",
-                    "output_type": "band",
-                    "coord_system": "ifualign",
-                    "weighting": "drizzle",
-                },
+                # cube build is disabled by default because of memory
+                # issues (doesn't work on my 64GB machine.) Cubes will
+                # be built in separate postprocessing step.
+                "cube_build": skiptrue,
+                #     "grating": "all",
+                #     "filter": "all",
+                #     "output_type": "band",
+                #     "coord_system": "ifualign",
             }
 
     if instrument == "MIR_MRS":
