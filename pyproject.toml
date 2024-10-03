@@ -24,3 +24,4 @@ build-backend = "poetry.core.masonry.api"
 create_association = 'pdrs4all.create_association:main'
 pipeline = 'pdrs4all.pipeline_run:main'
 nsclean_run = 'pdrs4all.nsclean_run:main'
+extract_templates = 'pdrs4all.extract_templates:main'
