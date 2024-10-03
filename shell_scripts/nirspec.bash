@@ -7,7 +7,7 @@ set -e
 # J is the number of processes for stage 1 and 2. The recommended limit, is to make sure you
 # have about 10 GB of RAM per process. For the science cluster at ST, with 512 GB RAM, I use
 # J=48.
-J=4
+J=1
 
 # JJ is the number of processes for stage 3, where cube_build is a big memory bottleneck. The
 # required memory depends heavily on the final shape of the cube. For Orion, there is lots of
@@ -115,17 +115,17 @@ parallel -j $J nsclean_run {} $OUT_SCI_NSC/stage1/{/} ::: $OUT_SCI/stage1/*rate.
 
 # the rest of the steps with the cleaned data
 
-# background stage 2
-pipeline -s 2 -i $OUT_BKGI_NSC -o $OUT_BKG_NSC $IN_BKG
+# background stage 2 (point input to NSclean output dirs)
+pipeline -s 2 -i $OUT_BKGI_NSC --intermediate_dir $OUT_BKG_NSC -o $OUT_BKG $IN_BKG
 mv strun_calwebb_spec2_jobs.sh jobs_bkg_2.sh
 parallel_shorthand $J bkg_2
 
 # science stage 2
-pipeline -s 2 -i $OUT_SCII_NSC -o $OUT_SCI_NSC $IN_SCI
+pipeline -s 2 -i $OUT_SCII_NSC --intermediate_dir $OUT_SCI_NSC -o $OUT_SCI $IN_SCI
 mv strun_calwebb_spec2_jobs.sh jobs_sci_2.sh
 parallel_shorthand $J sci_2
 
 # science stage 3
-pipeline -s 3 --mosaic -b $OUT_BKG_NSC -o $OUT_SCI_NSC $IN_SCI
+pipeline -s 3 --mosaic -b $OUT_BKG -o $OUT_SCI $IN_SCI
 mv strun_calwebb_spec3_jobs.sh jobs_sci_3.sh
 parallel_shorthand 1 sci_3
