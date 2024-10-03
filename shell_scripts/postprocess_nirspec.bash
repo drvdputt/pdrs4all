@@ -20,7 +20,7 @@ done
 cp "$RUNDIR"/log/* "$NEWDIR"/log
 
 # crf files (for nirspec, nscleaned output is in separate directory
-cp "$RUNDIR"_nsclean/science/stage3/*crf.fits "$NEWDIR"/crf
+cp "$RUNDIR"/science/stage3/*crf.fits "$NEWDIR"/crf
 
 # we are now done copying stuff, so cd into the data release directory
 cd "$NEWDIR"
@@ -38,13 +38,13 @@ create_association F290LP_crf crf/jw01288003001_0310?_*crf.fits
 # Default resolution cubes
 mkdir -p cubes/default
 for ASN in F???LP_crf_asn.json
-do strun cube_build $ASN --output_dir cubes/default --cube_pa=250.42338204969806 --ouput_type='band'
+do strun cube_build $ASN --output_dir cubes/default --cube_pa=250.42338204969806
 done
 
 # Cubes matched to MIRI MRS Ch1
 mkdir -p cubes/ch1wcs
 for ASN in F???LP_crf_asn.json
-do strun cube_build $ASN --output_dir cubes/ch1wcs --cube_pa=250.42338204969806 --scalexy 0.13 --ra_center 83.83535169747073 --dec_center -5.419729392828107  --nspax_x 213 --nspax_y 41 --output_type='band'
+do strun cube_build $ASN --output_dir cubes/ch1wcs --cube_pa=250.42338204969806 --scalexy 0.13 --ra_center 83.83535169747073 --dec_center -5.419729392828107  --nspax_x 213 --nspax_y 41
 done
 
 # WCS correction needs to happen here
