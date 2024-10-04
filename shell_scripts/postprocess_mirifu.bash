@@ -23,7 +23,7 @@ cp "$RUNDIR"/log/* "$NEWDIR"/log
 cp "$RUNDIR"/science/stage3/*crf.fits "$NEWDIR"/crf
 
 # for mirifu, the cubes build in stage 3 without problems, so we can just copy them here
-cp "$RUNDIR"/scienc/stage3/*s3d.fits "$NEWDIR"/cubes/default
+cp "$RUNDIR"/science/stage3/*s3d.fits "$NEWDIR"/cubes/default
 
 # we are now done copying stuff, so cd into the data release directory
 cd "$NEWDIR"
@@ -39,8 +39,8 @@ create_association 34LONG_crf crf/jw01288002001_0211[13579bdfh]*_mirifulong_*_cr
 create_association 12MEDIUM_crf crf/jw01288002001_0210[jlnprtvxz]*_mirifushort_*_crf.fits
 create_association 34MEDIUM_crf crf/jw01288002001_0210[jlnprtvxz]*_mirifulong_*_crf.fits
 # SHORT = 02101 - 0210h
-create_association 12SHORT_crf jw01288002001_0210[12579bdfh]*_mirifushort_*_crf.fits
-create_association 34SHORT_crf jw01288002001_0210[12579bdfh]*_mirifulong_*_crf.fits
+create_association 12SHORT_crf crf/jw01288002001_0210[12579bdfh]*_mirifushort_*_crf.fits
+create_association 34SHORT_crf crf/jw01288002001_0210[12579bdfh]*_mirifulong_*_crf.fits
 
 # Cubes matched to MIRI MRS Ch1
 mkdir -p cubes/ch1wcs
