@@ -1,0 +1,10 @@
+{
+    "steps": {
+        "jump": {
+            "skip": true
+        },
+        "ramp_fit": {
+            "algorithm": "LIKELY"
+        }
+    }
+}
