@@ -38,41 +38,56 @@ that I need.
 
 """
 
-from pdrs4all.stitcher import Stitcher
-from pdrs4all.synth import Synth
+from specutils import Spectrum1D
+from argparse import ArgumentParser
+from pdrs4all import synth
+from myastro import spectral_segments, cube
+from astropy.wcs import WCS
+from pathlib import Path
 
-def step_1a_make_and_save_synthetic_images(fname_cube,
-                                       fname_synth_images_fits,
-                                       fname_synth_images_unc_fits,
-                                       path_to_throughputs):
-        '''
-        For NIRSpec only at the moment
-        '''
-        sim = Synth(path_to_throughputs)
-        synth_im_dict, cc_dict = sim.images(fname_cube)
 
-        w = wcs.WCS(fits.open(fname_cube)['CUBE'].header).dropaxis(2)
-        synth.write_synth_to_fits(synth_im_dict, w, fname_synth_images_fits,
-                                  fname_synth_images_unc_fits)
-        # synth.write_synth_to_pickle(fname_synth_images_pickle)
+def parse_args():
+    ap = ArgumentParser()
+    ap.add_argument(
+        "nirspec_cubes",
+        nargs=3,
+        help="nirspec _s3d.fits of the same spatial dimensions, in wavelength order, i.e. 100, 170, 290",
+    )
+    ap.add_argument("--output_dir", default="./")
+    args = ap.parse_args()
+    return args
 
-        return synth_im_dict, cc_dict
+
+def main(args):
+    # step 0: load individual cubes and make naive stitched cube to be
+    # used for synthetic photometry
+    output_path = Path(args.output_dir)
+
+    # sort cubes by shortest wavelength
+    s3ds = [Spectrum1D.read(fn) for fn in args.nirspec_cubes]
+    s3ds.sort(key=lambda x: x.spectral_axis.value[0])
+
+    # use algorithm from Dries' package. We can include a copy later.
+    nirspec_cwcs = WCS(s3ds[0].meta["header"]).celestial
+    s3dm = spectral_segments.merge_nd(s3ds)
+    cube.write_cube_wavetab_jwst_s3d_format(
+        output_path / "nirspec_naive_stitch.fits",
+        s3dm.flux.value,
+        s3dm.uncertainty.array,
+        s3dm.spectral_axis.value,
+        nirspec_cwcs,
+    )
+
+    # step 1a: nirspec synthetic photometry
+    synth_image_dict, cc_dict = synth.synthesize_nircam_images(s3dm)
+    # write them out to see if its working
+    synth.write_synth_to_fits(
+        synth_image_dict,
+        nirspec_cwcs,
+        output_path / "nirspec_synth_nircam.fits",
+        output_path / "nirspec_synth_nircam_unc.fits",
+    )
 
 
 if __name__ == "__main__":
-    stest = Stitcher(fnames_s3d_f100lp=fnames_f100lp,
-                        fnames_s3d_f170lp=fnames_f170lp,
-                        fnames_s3d_f290lp=fnames_f290lp,
-                        output_dir_wcs=output_dir_wcs,
-                        output_dir_reprojected_s3d=output_dir_reprojected_s3d,
-                        output_dir_stitched_cubes=output_dir_stitched_cubes)
-
-    # run stitch_arcade_1overf_corr_10May.py step3_synth_full_mosaic
-    stest.make_and_save_synthetic_images_mosaic(
-        fname_synth_images_fits,
-        fname_synth_images_unc_fits,
-        path_to_throughputs=path_to_throughputs,
-        wcscorr=False,
-        calibrated=False,
-        scaled=False)
-
+    main(parse_args())
