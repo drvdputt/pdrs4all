@@ -358,6 +358,7 @@ def synthesize_nircam_images(nirspec_s3d_merged):
     unc_comb_cube = np.moveaxis(nirspec_s3d_merged.uncertainty.array, -1, 0)
     synth_image_dict, cc_dict = make_synthetic_images_from_cube(
         comb_cube,
+        nirspec_s3d_merged.spectral_axis.value,
         unc_comb_cube=unc_comb_cube,
         min_throughput=DEFAULT_MIN_THROUGHPUT,
         min_coverage=DEFAULT_MIN_COVERAGE,
