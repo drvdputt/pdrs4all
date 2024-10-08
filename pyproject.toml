@@ -21,7 +21,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-create_association = 'pdrs4all.create_association:main'
-pipeline = 'pdrs4all.pipeline_run:main'
-nsclean_run = 'pdrs4all.nsclean_run:main'
-extract_templates = 'pdrs4all.extract_templates:main'
+create_association = 'pdrs4all.pipeline.create_association:main'
+pipeline_jobs = 'pdrs4all.pipeline.strun_joblist:main'
+nsclean_run = 'pdrs4all.pipeline.nsclean_run:main'
+extract_templates = 'pdrs4all.postprocess.extract_templates:main'
