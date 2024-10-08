@@ -3,6 +3,8 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from pdrs4all import bandpasses
+from itertools import product
+from tqdm import tqdm
 
 DEFAULT_MIN_THROUGHPUT = 1.0e-3  # 1e-4  # 5e-2
 DEFAULT_MIN_COVERAGE = 0.95  # 1.
@@ -141,8 +143,8 @@ def synthetic_photometry_on_spectrum(
     if not good_coverage:
         return (None, None, None, None, None)
 
-    print(coverage, n_waves)
-    print(f"{lambda_min} um to {lambda_max} um")
+    # print(coverage, n_waves)
+    # print(f"{lambda_min} um to {lambda_max} um")
     # Interpolate throughput on wavelength grid of stitched cube
     tp_interp = np.interp(waves_i, lambdas_filt, tp_filt)
 
@@ -230,65 +232,63 @@ def make_synthetic_images_from_cube(
         synth_image_dict["unc_convention_b"] = {}
 
     # initialize arrays
-    nw, nx, ny = comb_cube.shape
+    nw, ny, nx = comb_cube.shape
     for filter_key in filter_names:
-        cc_dict[filter_key] = np.full((nx, ny), fill_value=np.nan)
+        cc_dict[filter_key] = np.full((ny, nx), fill_value=np.nan)
         synth_image_dict["convention_a"][filter_key] = np.full(
-            (nx, ny), fill_value=np.nan
+            (ny, nx), fill_value=np.nan
         )
         synth_image_dict["convention_b"][filter_key] = np.full(
-            (nx, ny), fill_value=np.nan
+            (ny, nx), fill_value=np.nan
         )
         if unc_comb_cube is not None:
             synth_image_dict["unc_convention_a"][filter_key] = np.full(
-                (nx, ny), fill_value=np.nan
+                (ny, nx), fill_value=np.nan
             )
             synth_image_dict["unc_convention_b"][filter_key] = np.full(
-                (nx, ny), fill_value=np.nan
+                (ny, nx), fill_value=np.nan
             )
 
     # perform photometry for each spaxel
-    for ix in range(nx):
-        for iy in range(ny):
-            print(f"ix, iy = {ix, iy}")
-            flux_source = comb_cube[:, ix, iy]
+    for ix, iy in tqdm(product(range(nx), range(ny))):
+        flux_source = comb_cube[:, iy, ix]
+        if unc_comb_cube is not None:
+            unc_flux_source = unc_comb_cube[:, iy, ix]
+
+        for filter_key in filter_names:
+            min_throughput_temp = min_throughput
+            min_coverage_temp = min_coverage
+
+            if filter_key in ["F140M", "F277M"]:
+                min_throughput_temp = 1e-3
+                min_coverage_temp = 0.8
+
+            (
+                flux_convention_a,
+                flux_convention_b,
+                colour_corr,
+                unc_flux_convention_a,
+                unc_flux_convention_b,
+            ) = synthetic_photometry_on_spectrum(
+                waves,
+                flux_source,
+                nircam_bandpasses[filter_key],
+                spectrum_unc=unc_flux_source,
+                min_throughput=min_throughput_temp,
+                min_coverage=min_coverage_temp,
+            )
+
+            cc_dict[filter_key][iy, ix] = colour_corr
+            synth_image_dict["convention_a"][filter_key][iy, ix] = flux_convention_a
+            synth_image_dict["convention_b"][filter_key][iy, ix] = flux_convention_b
+
             if unc_comb_cube is not None:
-                unc_flux_source = unc_comb_cube[:, ix, iy]
-
-            for filter_key in filter_names:
-                min_throughput_temp = min_throughput
-                min_coverage_temp = min_coverage
-
-                if filter_key in ["F140M", "F277M"]:
-                    min_throughput_temp = 1e-3
-                    min_coverage_temp = 0.8
-
-                (
-                    flux_convention_a,
-                    flux_convention_b,
-                    colour_corr,
-                    unc_flux_convention_a,
-                    unc_flux_convention_b,
-                ) = synthetic_photometry_on_spectrum(
-                    waves,
-                    flux_source,
-                    nircam_bandpasses[filter_key],
-                    spectrum_unc=unc_flux_source,
-                    min_throughput=min_throughput_temp,
-                    min_coverage=min_coverage_temp,
-                )
-
-                cc_dict[filter_key][ix, iy] = colour_corr
-                synth_image_dict["convention_a"][filter_key][ix, iy] = flux_convention_a
-                synth_image_dict["convention_b"][filter_key][ix, iy] = flux_convention_b
-
-                if unc_comb_cube is not None:
-                    synth_image_dict["unc_convention_a"][filter_key][
-                        ix, iy
-                    ] = unc_flux_convention_a
-                    synth_image_dict["unc_convention_b"][filter_key][
-                        ix, iy
-                    ] = unc_flux_convention_b
+                synth_image_dict["unc_convention_a"][filter_key][
+                    iy, ix
+                ] = unc_flux_convention_a
+                synth_image_dict["unc_convention_b"][filter_key][
+                    iy, ix
+                ] = unc_flux_convention_b
 
     return synth_image_dict, cc_dict
 
@@ -351,11 +351,9 @@ def synthesize_nircam_images(nirspec_s3d_merged):
     cc_dict: dict where d[<filter name>] = color correction (not sure what format)
 
     """
-    # the other functions in this module assume that the axes are w, x,
-    # y in that order. Specutils uses x, y, w. Therefore, move last axis
-    # to first position.
-    comb_cube = np.moveaxis(nirspec_s3d_merged.flux.value, -1, 0)
-    unc_comb_cube = np.moveaxis(nirspec_s3d_merged.uncertainty.array, -1, 0)
+    # Specutils uses x, y, w. Change it to w, y, x
+    comb_cube = np.swapaxes(nirspec_s3d_merged.flux.value, -1, 0)
+    unc_comb_cube = np.swapaxes(nirspec_s3d_merged.uncertainty.array, -1, 0)
     synth_image_dict, cc_dict = make_synthetic_images_from_cube(
         comb_cube,
         nirspec_s3d_merged.spectral_axis.value,

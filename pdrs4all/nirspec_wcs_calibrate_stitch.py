@@ -70,11 +70,9 @@ def main(args):
     # use algorithm from Dries' package. We can include a copy later.
     nirspec_cwcs = WCS(s3ds[0].meta["header"]).celestial
     s3dm = spectral_segments.merge_nd(s3ds)
-    cube.write_cube_wavetab_jwst_s3d_format(
+    cube.write_cube_s1d_wavetab_jwst_s3d_format(
         output_path / "nirspec_naive_stitch.fits",
-        s3dm.flux.value,
-        s3dm.uncertainty.array,
-        s3dm.spectral_axis.value,
+        s3dm,
         nirspec_cwcs,
     )
 
