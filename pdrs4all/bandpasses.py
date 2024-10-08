@@ -1,7 +1,6 @@
 from astropy import units as u
 import numpy as np
-
-PATH_TO_THROUGHPUT = "/Users/driesvandeputte/Projects/pdrs4all/sep3_stitching/nirspec_code_ryan/nircam_throughputs"
+from importlib import resources
 
 
 def read_nircam(use_v0_filters=False):
@@ -18,7 +17,7 @@ def read_nircam(use_v0_filters=False):
     wavelength array, efficiency array)
 
     """
-    path_to_throughputs = PATH_TO_THROUGHPUT
+    path_to_throughputs = resources.files("pdrs4all") / "resources/nircam_throughputs"
     nircam_bandpasses = {}
 
     # Short wavelength filters
@@ -57,22 +56,22 @@ def read_nircam(use_v0_filters=False):
     filters_all = filters_sw + filters_lw
 
     for filtername in filters_all:
-
         if use_v0_filters:
-            wave = np.loadtxt(
-                f"{path_to_throughputs}nircam_throughputs/modAB_mean/nrc_plus_ote/{filtername}_NRC_and_OTE_ModAB_mean.txt",
-                skiprows=1,
-            )[:, 0]
-            eff = np.loadtxt(
-                f"{path_to_throughputs}nircam_throughputs/modAB_mean/nrc_plus_ote/{filtername}_NRC_and_OTE_ModAB_mean.txt",
-                skiprows=1,
-            )[:, 1]
-        else:
-            wave, eff = np.loadtxt(
-                f"{path_to_throughputs}nircam_throughputs/mean_throughputs/{filtername}_mean_system_throughput.txt",
-                skiprows=1,
-                unpack=True,
+            tp_path = (
+                path_to_throughputs
+                / f"modAB_mean/nrc_plus_ote/{filtername}_NRC_and_OTE_ModAB_mean.txt"
             )
+        else:
+            tp_path = (
+                path_to_throughputs
+                / f"mean_throughputs/{filtername}_mean_system_throughput.txt"
+            )
+
+        wave, eff = np.loadtxt(
+            tp_path,
+            skiprows=1,
+            unpack=True,
+        )
 
         # compute the reference wave
         # defined as the pivot wavelength in Gordon et al. (2022)
