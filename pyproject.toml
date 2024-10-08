@@ -11,10 +11,10 @@ python = ">3.11,<3.13"
 astropy = "^6.0.0"
 crds = ">=11.17.16"
 jwst = "*"
-myastro = {git = "https://github.com/drvdputt/my-astro"}
 regions = ">=0.8"
 specutils = ">=1.13.0"
 pyqt6 = "^6.7.0"
+tqdm = "^4.66.5"
 
 [build-system]
 requires = ["poetry-core"]
