@@ -2,7 +2,7 @@ from astropy.modeling.models import PowerLaw1D
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from pdrs4all import bandpasses
+from pdrs4all.postprocess import bandpasses
 from itertools import product
 from tqdm import tqdm
 

@@ -41,7 +41,7 @@ that I need.
 from specutils import Spectrum1D
 from argparse import ArgumentParser
 from pdrs4all import synth
-from myastro import spectral_segments, cube
+from pdrs4all.postprocess import spectral_segments, cube
 from astropy.wcs import WCS
 from pathlib import Path
 

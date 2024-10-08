@@ -11,9 +11,8 @@ from astropy.wcs.utils import proj_plane_pixel_area
 from astropy.nddata import StdDevUncertainty
 from regions import Regions, SkyRegion
 from specutils import Spectrum1D
-from myastro import spectral_segments
+from pdrs4all.postprocess import spectral_segments
 import numpy as np
-from matplotlib import pyplot as plt
 
 
 def main():
@@ -162,7 +161,7 @@ def cube_sky_aperture_extraction_v3(
     nx, ny = cube_spec1d.shape[:2]
 
     pixel_region = sky_region.to_pixel(the_wcs_2d)
-    aperture_mask = pixel_region.to_mask(mode='subpixels', subpixels=20)
+    aperture_mask = pixel_region.to_mask(mode="subpixels", subpixels=20)
 
     slices_large, slices_small = aperture_mask.get_overlap_slices((ny, nx))
     yx_slc = slices_large

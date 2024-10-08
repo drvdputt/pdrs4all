@@ -8,6 +8,7 @@ grating. For medium resolution, custom masks are used. For high
 resolution, those included in NSClean are used.
 
 """
+
 import argparse
 import numpy as np
 from astropy.io import fits
