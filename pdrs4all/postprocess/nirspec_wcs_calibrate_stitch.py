@@ -59,15 +59,13 @@ def parse_args():
 
 
 def main(args):
-    # step 0: load individual cubes and make naive stitched cube to be
-    # used for synthetic photometry
+    # step 0: make naive stitched cube for synthetic photometry
     output_path = Path(args.output_dir)
 
-    # sort cubes by shortest wavelength
+    # merge algorithm needs sorted list of Spectrum1D cubes
     s3ds = [Spectrum1D.read(fn) for fn in args.nirspec_cubes]
     s3ds.sort(key=lambda x: x.spectral_axis.value[0])
 
-    # use algorithm from Dries' package. We can include a copy later.
     nirspec_cwcs = WCS(s3ds[0].meta["header"]).celestial
     s3dm = spectral_segments.merge_nd(s3ds)
     cube.write_cube_s1d_wavetab_jwst_s3d_format(
