@@ -60,11 +60,14 @@ def main():
     else:
         template_names = args.template_names
 
-    t = extract_templates_table(
-        cubes, regions, template_names, args.apply_offsets, args.reference_segment
-    )
-    fname = "templates.ecsv"
-    print(f"Writing extracted spectra to {fname}")
+    # extract for each region
+    templates_spec1d = [
+        extract_and_merge(cubes, a, args.apply_offsets, args.reference_segment)
+        for a in regions
+    ]
+
+    # use names and spectra to make table
+    t = make_templates_table(template_names, templates_spec1d)
 
     # add some info about which files these templates were generated from
     t.meta["stitch_method"] = "additive" if args.apply_offsets else "none"
@@ -73,6 +76,9 @@ def main():
     )
     t.meta["cubes"] = args.cube_files
 
+    # write
+    fname = "templates.ecsv"
+    print(f"Writing extracted spectra to {fname}")
     t.write(fname, overwrite=True)
 
 
@@ -96,21 +102,27 @@ def extract_and_merge(cubes, aperture, apply_offsets, offset_reference=0):
     return spectral_segments.merge_1d(specs_to_merge)
 
 
-def extract_templates_table(
-    cubes, apertures, template_names, apply_offsets=False, offset_reference=0
-):
-    templates = {
-        k: extract_and_merge(cubes, a, apply_offsets, offset_reference)
-        for k, a in zip(template_names, apertures)
-    }
+def make_templates_table(keys, spec1ds):
+    """
+    Construct astropy table from extracted template spectra.
 
+    Parameters
+    ----------
+    keys: list of str
+        Label for each spectrum to use in the column names. Columns will
+        be "flux_k" and "unc_k", for each k in keys.
+
+    spec1ds: list of Spectrum1D
+        It is assumed that all spec1ds have the same wavelength grid.
+
+    """
     # Construct astropy table and save as ECSV
     columns = {
-        "wavelength": templates[template_names[0]].spectral_axis.to(u.micron),
+        "wavelength": spec1ds[0].spectral_axis.to(u.micron),
     }
-    for k, v in templates.items():
-        columns[f"flux_{k}"] = v.flux
-        columns[f"unc_{k}"] = v.uncertainty.array * v.flux.unit
+    for k, s in zip(keys, spec1ds):
+        columns[f"flux_{k}"] = s.flux
+        columns[f"unc_{k}"] = s.uncertainty.array * s.flux.unit
 
     t = Table(columns)
     return t
