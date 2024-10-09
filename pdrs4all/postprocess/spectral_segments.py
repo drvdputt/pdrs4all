@@ -413,16 +413,6 @@ def merge_nd_memfriendly(ss):
 
     # for memory reasons, we step through the whole thing in pairs.
     # start like this, already filling in the leftmost part.
-    wmask_left = new_wav_mask(ss[0])
-    flux_left = interp_f(ss[0], wmask_left)
-    unc2_left = interp_u2(ss[0], wmask_left)
-
-    wmask_right = new_wav_mask(ss[1])
-    flux_right = interp_f(ss[1], wmask_right)
-    unc2_right = interp_u2(ss[0], wmask_right)
-
-    flux_merged[..., wmask_left] = flux_left
-    unc2_merged[..., wmask_left] = unc2_left
 
     # initial state
     # xxx | ooo | ooo | ooo
@@ -437,8 +427,18 @@ def merge_nd_memfriendly(ss):
     # xxx X xxx X xxx | ooo
     #           ^- and fix overlap
 
-    for ileft, (wmin, wmax) in enumerate(overlap_ranges):
-        # write the right part
+    ileft = 0
+    iright = 1
+    wmask_left = new_wav_mask(ss[ileft])
+    flux_left = interp_f(ss[ileft], wmask_left)
+    unc2_left = interp_u2(ss[ileft], wmask_left)
+    flux_merged[..., wmask_left] = flux_left
+    unc2_merged[..., wmask_left] = unc2_left
+    for wmin, wmax in overlap_ranges:
+        # calculate and write right part
+        wmask_right = new_wav_mask(ss[iright])
+        flux_right = interp_f(ss[iright], wmask_right)
+        unc2_right = interp_u2(ss[iright], wmask_right)
         flux_merged[..., wmask_right] = flux_right
         unc2_merged[..., wmask_right] = unc2_right
 
@@ -460,16 +460,15 @@ def merge_nd_memfriendly(ss):
         ] + sliding_weight * unc2_right[..., :N_overlap]
 
         # at the end of the loop, right becomes left...
+        ileft = iright
         wmask_left = wmask_right
         flux_left = flux_right
         unc2_left = unc2_right
-        # and new right is calculated
-        wmask_right = new_wav_mask(ss[ileft + 1])
-        flux_right = interp_f(ss[ileft + 1], wmask_right)
-        unc2_right = interp_u2(ss[ileft + 1], wmask_right)
+        # and new right will be calculated next loop
+        iright += 1
 
     return Spectrum1D(
         flux_merged * ss[0].flux.unit,
         new_spectral_axis,
-        uncertainty=StdDevUncertainty(unc2_merged),
+        uncertainty=StdDevUncertainty(np.sqrt(unc2_merged)),
     )
