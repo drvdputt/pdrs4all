@@ -61,17 +61,17 @@ OUT_BKG=$HERE/$OUT_PFX/background
 # the commands below assume that the pdrs4all python package is installed
 
 # background (need up to stage 2)
-pipeline -j $J -s 12 -o $OUT_BKG $IN_BKG
+pipeline_jobs -j $J -s 12 -o $OUT_BKG $IN_BKG
 # background stage 3 if interested
-# pipeline -j $JJ -s 3 -o $OUT_BKG $IN_BKG
+# pipeline_jobs -j $JJ -s 3 -o $OUT_BKG $IN_BKG
 
 # science
-pipeline -j $J -s 1 -o $OUT_SCI $IN_SCI
+pipeline_jobs -j $J -s 1 -o $OUT_SCI $IN_SCI
 
 # stage 2 and 3 using master background
-pipeline -j $J -s 2 --residual_fringe -o $OUT_SCI $IN_SCI
-pipeline -j $JJ -s 3 --mosaic -b $OUT_BKG --intermediate_dir=${OUT_SCI} -o ${OUT_SCI}_mbg $IN_SCI
+pipeline_jobs -j $J -s 2 --residual_fringe -o $OUT_SCI $IN_SCI
+pipeline_jobs -j $JJ -s 3 --mosaic -b $OUT_BKG --intermediate_dir=${OUT_SCI} -o ${OUT_SCI}_mbg $IN_SCI
 
 # stage 2 and 3 using image-to-image background
-pipeline -j $J -s 2 --residual_fringe -b $OUT_BKG --intermediate_dir=${OUT_SCI} -o ${OUT_SCI}_ibg $IN_SCI
-pipeline -j $JJ -s 3 --mosaic --intermediate_dir=${OUT_SCI}_ibg -o ${OUT_SCI}_ibg $IN_SCI
+pipeline_jobs -j $J -s 2 --residual_fringe -b $OUT_BKG --intermediate_dir=${OUT_SCI} -o ${OUT_SCI}_ibg $IN_SCI
+pipeline_jobs -j $JJ -s 3 --mosaic --intermediate_dir=${OUT_SCI}_ibg -o ${OUT_SCI}_ibg $IN_SCI
