@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_area
 from astropy.nddata import StdDevUncertainty
+from astropy.io import fits
 from regions import Regions, SkyRegion
 from specutils import Spectrum1D
 from pdrs4all.postprocess import spectral_segments
@@ -45,10 +46,16 @@ def main():
     )
     args = ap.parse_args()
 
-    # load the cubes
-    cubes = spectral_segments.sort(
-        [Spectrum1D.read(cf, format="JWST s3d") for cf in args.cube_files]
-    )
+    # load the cubes and WCS. Need to load WCS here, as using
+    # cube.meta['header'] does not work for WAVE-TAB type cube
+    cubes = []
+    celestial_wcss = []
+    for cf in args.cube_files:
+        cubes.append(Spectrum1D.read(cf, format="JWST s3d"))
+        with fits.open(cf) as hdulist:
+            # need both header and fobj arguments for WAVE-TAB cube it seems
+            wcs = WCS(header=hdulist['SCI'], fobj=hdulist)
+            celestial_wcss.append(wcs.celestial)
 
     # set up template apertures and names
     regions = Regions.read(args.region_file)
@@ -62,7 +69,7 @@ def main():
 
     # extract for each region
     templates_spec1d = [
-        extract_and_merge(cubes, a, args.apply_offsets, args.reference_segment)
+        extract_and_merge(cubes, celestial_wcss, a, args.apply_offsets, args.reference_segment)
         for a in regions
     ]
 
@@ -83,13 +90,14 @@ def main():
 
 
 # define this local utility function
-def extract_and_merge(cubes, aperture, apply_offsets, offset_reference=0):
+def extract_and_merge(cubes, celestial_wcss, aperture, apply_offsets, offset_reference=0):
     """Steps that need to happen for every aperture.
 
     1. extract from every given cube
     2. apply stitching corrections
     3. return a single merged spectrum"""
-    specs = [cube_sky_aperture_extraction_v3(s, aperture) for s in cubes]
+    specs = [cube_sky_aperture_extraction_v3(s, aperture, wcs_2d=cwcs) for s, cwcs in zip(cubes, celestial_wcss)]
+    specs = spectral_segments.sort(specs)
 
     if apply_offsets:
         shifts = spectral_segments.overlap_shifts(specs)
