@@ -10,6 +10,18 @@ In addition to running the pipeline with our preferred settins, there are also
 tools to create resolution-matched data cubes, merged cubes, stitched cubes,
 extracted template spectra.
 
+## Installation
+
+1. Clone this repository
+2. Install the python package in your environment by running `pip install -e .`
+   in the root directory of this repository. Alternatively, use `poetry
+   install`, and then `poetry shell` to create and activate a new environment.
+3. Install NSClean manually, see [Paper on
+   arxiv](https://arxiv.org/abs/2306.03250), and [download
+   page](https://webb.nasa.gov/content/forScientists/publications.html).
+   Download and `nsclean_1.9.tar.gz`, then `cd` into `nsclean_1.9/` and run `pip
+   install .` in the environment.
+
 ## Workflow Part 1: Running the pipeline
 
 PDRs4All consists of NIRCam imaging, MIRI imaging, NIRSpec IFU spectroscopy, and
@@ -25,7 +37,7 @@ First, sort the `_uncal` according to
 2. instrument
 3. exposure type: science, background, and (nirspec only) science imprint,
    background imprint.
-   
+
 Then, copy the appropriate shell script from the `shell_scripts` directory in
 this repository to your working directory (one level above the science and
 background directories). For example, your directory structure could look like
@@ -48,13 +60,7 @@ this.
     - `background/`
 - `object_2/`
   ...
-  
-To run the pipeline, one can simply use
-```bash
-cd object_1/mirifu/
-<activate python environment where pdrs4all is installed>
-bash mirifu.bash
-```
+
 
 Note: The historical reason for this was to work around some issues with the
 default association files. We coded a simplified association generator which
@@ -63,6 +69,42 @@ that the files are sorted correctly, and does not actually apply any association
 rules. This manual approach has the advantage that it is fully predictable what
 products will processed and which will be used as a background etc.
 
+### Run the shell script
+
+To run the pipeline, one can simply use
+```bash
+cd object_1/mirifu/
+<activate python environment where pdrs4all is installed>
+bash mirifu.bash
+```
+
+While the shell script is running it will create output directories. Your mirifu
+directory from the above example will then look like this
+
+`mirifu/`
+ - `mirifu.bash`
+ - `science/` <- uncal input files
+ - `background/` <- uncal input files
+ - `latestpmap/`
+   + `science/`
+     - `stage1/` <- rate files + stage 2 ASN files are here
+     - `stage2/` <- cal files + stage 3 ASN files are here
+     - `stage3/` <- cubes are here
+   + `background/`
+     - `stage1/` <- used in stage 2 for background subtraction
+   + `log/`
+     - bkg\_1\_cpu1.log <- saved pipeline output, separate for each process (see warning below)
+     - bkg\_1.joblog <- overview of the strun jobs that ran. Useful to inspect exit values (if any job failed).
+     - sci\_?.log and sci\_?.joblog <- same for all three stages of the science files
+     - sci\_?.joblog
+     - versions.txt <- contains pmap and jwst version info
+
+Warning about multiprocessing: set the J variable at the top of each shell
+script to 1 for an initial run, to avoid conflicts when the references files are
+being downloaded. For re-runs (with different options), multiprocessing can be
+used safely as long as the CRDS context has not changed. When J is set > 1, the
+scripts will use GNU parallel to run multiple pipelines at the same time. I
+recommend having at least 8 GB of RAM per process.
 
 ## 1D merged spectrum extraction
 
@@ -117,19 +159,6 @@ added.
 
 ## Installation
 
-1. Clone this repository
-2. Install the python package in your environment by running `pip install -e .`
-   in the root directory of this repository. Alternatively, use `poetry
-   install`, and then `poetry shell` to create and activate a new environment.
-3. Install a manual dependency: NSClean, see [Paper on
-   arxiv](https://arxiv.org/abs/2306.03250), and [download
-   page](https://webb.nasa.gov/content/forScientists/publications.html).
-   Download and `nsclean_1.9.tar.gz`, then `cd` into `nsclean_1.9/` and run `pip
-   install .` in your environment. TODO: use built-in pipeline NSclean and
-   remove this dependency.
-4. Run `pip install pandas` to work around a numpy version conflict somewhere
-   down the dependency trees of `jwst` and `pandas`. TODO: check if this is
-   still needed.
 
 ## Quick start
 
