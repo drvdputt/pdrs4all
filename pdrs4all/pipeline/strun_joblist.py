@@ -1,9 +1,9 @@
 import jwst
 from jwst import datamodels
 from crds.config import get_crds_env_context
-from pdrs4all.pipeline_arguments import parse_args
-from pdrs4all import create_association
-from pdrs4all.pipeline_settings import (
+from pdrs4all.pipeline.command_line_arguments import parse_args
+from pdrs4all.pipeline import create_association
+from pdrs4all.pipeline.default_settings import (
     pipeline_class_and_options_dict,
     apply_custom_options,
 )

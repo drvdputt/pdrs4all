@@ -39,8 +39,8 @@ create_association 34LONG_crf crf/jw01288002001_0211[13579bdfh]*_mirifulong_*_cr
 create_association 12MEDIUM_crf crf/jw01288002001_0210[jlnprtvxz]*_mirifushort_*_crf.fits
 create_association 34MEDIUM_crf crf/jw01288002001_0210[jlnprtvxz]*_mirifulong_*_crf.fits
 # SHORT = 02101 - 0210h
-create_association 12SHORT_crf crf/jw01288002001_0210[12579bdfh]*_mirifushort_*_crf.fits
-create_association 34SHORT_crf crf/jw01288002001_0210[12579bdfh]*_mirifulong_*_crf.fits
+create_association 12SHORT_crf crf/jw01288002001_0210[13579bdfh]*_mirifushort_*_crf.fits
+create_association 34SHORT_crf crf/jw01288002001_0210[13579bdfh]*_mirifulong_*_crf.fits
 
 # Cubes matched to MIRI MRS Ch1
 mkdir -p cubes/ch1wcs

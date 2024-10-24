@@ -11,17 +11,17 @@ python = ">3.11,<3.13"
 astropy = "^6.0.0"
 crds = ">=11.17.16"
 jwst = "*"
-myastro = {git = "https://github.com/drvdputt/my-astro"}
 regions = ">=0.8"
 specutils = ">=1.13.0"
 pyqt6 = "^6.7.0"
+tqdm = "^4.66.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-create_association = 'pdrs4all.create_association:main'
-pipeline = 'pdrs4all.pipeline_run:main'
-nsclean_run = 'pdrs4all.nsclean_run:main'
-extract_templates = 'pdrs4all.extract_templates:main'
+create_association = 'pdrs4all.pipeline.create_association:main'
+pipeline_jobs = 'pdrs4all.pipeline.strun_joblist:main'
+nsclean_run = 'pdrs4all.pipeline.nsclean_run:main'
+extract_templates = 'pdrs4all.postprocess.extract_templates:main'

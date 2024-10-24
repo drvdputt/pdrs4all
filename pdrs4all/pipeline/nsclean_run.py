@@ -8,6 +8,7 @@ grating. For medium resolution, custom masks are used. For high
 resolution, those included in NSClean are used.
 
 """
+
 import argparse
 import numpy as np
 from astropy.io import fits
@@ -48,7 +49,7 @@ def main():
         print("grating can only be m or h")
         exit()
 
-    mask_path = str(files("pdrs4all.nsclean_masks").joinpath(mask_fn))
+    mask_path = str(files("pdrs4all.resources.nsclean_masks").joinpath(mask_fn))
     with fits.open(mask_path) as hdul:
         M = np.array(hdul[0].data, dtype=np.bool_)
 

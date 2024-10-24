@@ -77,15 +77,15 @@ parallel_shorthand () {
 # parallel_shorthand $J bkg_1
 
 # science
-pipeline -s 1 -o $OUT_SCI $IN_SCI
+pipeline_jobs -s 1 -o $OUT_SCI $IN_SCI
 mv strun_calwebb_detector1_jobs.sh jobs_sci_1.sh
 parallel_shorthand $J sci_1
 
-pipeline -s 2 -o $OUT_SCI $IN_SCI
+pipeline_jobs -s 2 -o $OUT_SCI $IN_SCI
 mv strun_calwebb_image2_jobs.sh jobs_sci_2.sh
 parallel_shorthand $J sci_2
 
-pipeline -s 3 --mosaic -o $OUT_SCI $IN_SCI
+pipeline_jobs -s 3 --mosaic -o $OUT_SCI $IN_SCI
 mv strun_calwebb_image3_jobs.sh jobs_sci_3.sh
 parallel_shorthand 1 sci_3
 
