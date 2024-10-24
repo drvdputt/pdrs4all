@@ -250,7 +250,7 @@ def make_synthetic_images_from_cube(
             )
 
     # perform photometry for each spaxel
-    for ix, iy in tqdm(product(range(nx), range(ny))):
+    for ix, iy in tqdm(product(range(nx), range(ny)), total=nx * ny):
         flux_source = comb_cube[:, iy, ix]
         if unc_comb_cube is not None:
             unc_flux_source = unc_comb_cube[:, iy, ix]
@@ -293,7 +293,7 @@ def make_synthetic_images_from_cube(
     return synth_image_dict, cc_dict
 
 
-def write_synth_to_fits(nircam_synth_images, w, fname_out_synth, fname_out_synth_unc):
+def write_synth_to_fits(synth_image_dict, w, fname_out_synth, fname_out_synth_unc):
     # New HDUList for synthetic images
     # Every fits file needs a PrimaryHDU. We'll make a blank one
     hdu0 = fits.PrimaryHDU()
@@ -304,12 +304,12 @@ def write_synth_to_fits(nircam_synth_images, w, fname_out_synth, fname_out_synth
     # Start an HDUList
     hdu_list_unc = [hdu0_unc]
 
-    filter_list = list(nircam_synth_images["convention_a"].keys())
+    filter_list = list(synth_image_dict["convention_a"].keys())
     hdr0 = w.to_header()
 
     for filt_tmp in filter_list:
-        arr = nircam_synth_images["convention_a"][filt_tmp]
-        unc_arr = nircam_synth_images["unc_convention_a"][filt_tmp]
+        arr = synth_image_dict["convention_a"][filt_tmp]
+        unc_arr = synth_image_dict["unc_convention_a"][filt_tmp]
         # One ImageHDU per image
         hdr = hdr0.copy()
         hdr["EXTNAME"] = (filt_tmp, "Filter")
