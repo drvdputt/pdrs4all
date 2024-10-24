@@ -63,6 +63,12 @@ def main(args):
     output_path = Path(args.output_dir)
     output_path.mkdir(exist_ok=True)
 
+    # names for the various outputs (and sometimes re-read as inputs)
+    naive_stitch_fits = output_path / "nirspec_naive_stitch.fits"
+    synth_fits = output_path / "nirspec_synth.fits"
+    synth_unc_fits = output_path / "nirspec_synth_unc.fits"
+    naive_stitch_wcscorr_fits = output_path / "nirspec_naive_stitch_wcscorr.fits"
+
     print("Step 0: load cubes and make naive stitched cube")
     s3ds = [Spectrum1D.read(fn) for fn in args.nirspec_cubes]
     # merge algorithm needs sorted list of Spectrum1D cubes
@@ -70,7 +76,6 @@ def main(args):
     nirspec_cwcs = WCS(s3ds[0].meta["header"]).celestial
 
     s3dm = spectral_segments.merge_nd_memfriendly(s3ds)
-    naive_stitch_fits = output_path / "nirspec_naive_stitch.fits"
     write_cube.write_cube_s1d_wavetab_jwst_s3d_format(
         naive_stitch_fits, s3dm, nirspec_cwcs
     )
@@ -78,8 +83,6 @@ def main(args):
     print("Step 1a: nirspec synthetic photometry to nircam fiters")
     synth_image_dict, cc_dict = synth.synthesize_nircam_images(s3dm)
     # write them out to see if its working
-    synth_fits = output_path / "nirspec_synth.fits"
-    synth_unc_fits = output_path / "nirspec_synth_unc.fits"
     synth.write_synth_to_fits(
         synth_image_dict,
         nirspec_cwcs,
@@ -99,11 +102,38 @@ def main(args):
 
     print("Step 2b: apply offset to cube")
 
-    # tested this in iPython, and I think it's going to work.
+    # This is working great with very minimal code
     naive_cube_dm = datamodels.open(naive_stitch_fits)
     naive_cube_dm.meta.wcsinfo.crval1 = new_cwcs.wcs.crval[0]
     naive_cube_dm.meta.wcsinfo.crval2 = new_cwcs.wcs.crval[1]
-    naive_cube_dm.write(output_path / "nirspec_naive_stitch_wcscorr.fits")
+
+    # add some extra info to the header
+    meta_keys = (
+        "bunit_data",
+        "bunit_err",
+        "cal_step",
+        "calibration_software_revision",
+        "calibration_software_version",
+        "compress",
+        "coordinates",
+        "data_processing_software_version",
+        "date",
+        "hga_move",
+        "origin",
+        "oss_software_version",
+        "photometry",
+        "prd_software_version",
+        "program",
+        "target",
+        "telescope",
+        "visit",
+    )
+    pipeline_cube_dm = datamodels.open(args.nirspec_cubes[0])
+    for k in meta_keys:
+        value = getattr(pipeline_cube_dm.meta, k)
+        setattr(naive_cube_dm.meta, k, value)
+
+    naive_cube_dm.write(naive_stitch_wcscorr_fits)
 
     # alternatively, we could open the individual cubes, and correct all
     # three of their WCS
