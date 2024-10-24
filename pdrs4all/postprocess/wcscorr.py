@@ -3,7 +3,7 @@ from astropy import units as u
 from photutils.background import MedianBackground, Background2D
 import numpy as np
 from astropy.stats import gaussian_fwhm_to_sigma
-from astropy.convolution import Gaussian2DKernel
+from astropy.convolution import Gaussian2DKernel, convolve
 from photutils.segmentation import detect_sources, SourceCatalog, deblend_sources
 
 
@@ -65,14 +65,12 @@ def nirspec_wcscorr_using_proplyd(reference_image, current_cwcs):
     sigma = fwhm * gaussian_fwhm_to_sigma  # FWHM = 3.
     kernel = Gaussian2DKernel(sigma)  # , xsize=1, ysize=1)
     kernel.normalize(mode="integral")
-    segm = detect_sources(
-        reference_image - bkg.background, threshold, npixels=npixels, kernel=kernel
-    )
+    convolved_data = convolve(reference_image - bkg.background, kernel)
+    segm = detect_sources(convolved_data, threshold, npixels=npixels)
     segm_deblend = deblend_sources(
-        reference_image - bkg.background,
+        convolved_data,
         segm,
         npixels=npixels,
-        kernel=kernel,
         nlevels=32,
         contrast=0.001,
     )
@@ -106,6 +104,6 @@ def nirspec_wcscorr_using_proplyd(reference_image, current_cwcs):
 
     # Create a modified wcs
     w_new = current_cwcs.deepcopy()
-    w_new.wcs.crval = w_new.wcs.crval + np.array([dra, ddec])
+    w_new.wcs.crval = w_new.wcs.crval + np.array([dra.value, ddec.value])
 
     return w_new
