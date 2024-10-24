@@ -10,6 +10,19 @@ In addition to running the pipeline with our preferred settins, there are also
 tools to create resolution-matched data cubes, merged cubes, stitched cubes,
 extracted template spectra.
 
+## Quick start
+
+1. Sort your data (see above)
+2. Copy the appropriate bash script from `shell_scripts/` to your working
+   directory
+3. Edit the copy of the script. Make sure to check the number of processes and
+   the CRDS context (pmap number `N`, `CRDS_PATH`, and `CRDS_SERVER_URL`).
+4. Activate the environment in which you installed this package (see
+   installation instructions above)
+5. Run `bash modified_script.bash`
+6. Check the postprocessing scripts for additional steps that interest you, and
+   the commands to run them.
+
 ## Installation
 
 1. Clone this repository
@@ -106,16 +119,44 @@ used safely as long as the CRDS context has not changed. When J is set > 1, the
 scripts will use GNU parallel to run multiple pipelines at the same time. I
 recommend having at least 8 GB of RAM per process.
 
-## 1D merged spectrum extraction
+## Workflow Part 2: Packaging as a PDRS4All data release and postprocessing
 
-We provide a script that performs an aperture extraction on the final cubes,
-merges the spectral segments, and collects the results in a plain text table. To
-use it, the following is needed:
+The shell\_scripts directory also contains scripts with "postprocess" in their
+name. These automate all steps that need to happen after running the pipeline.
+
+1. A PDRs4All data release directory with an informative filename is created
+   e.g. `vX.X_auto_jwst_1293.pmap_1.16.0`, indicating the CRDS context and jwst
+   pipeline version. "X.X" is a placeholder for a manually chosen version
+   number.
+2. Copy the `science/stage3/*crf.fits` files. 
+3. Copy the `science/stage3/*s3d.fits` files. These are the default cubes,
+   stored in the release directory at `cubes/default`.
+4. Create association files listing the crf files.
+5. Build custom cubes using the crf associations. Currently, `cubes/ch1wcs` are
+   built; these are cubes built on the ch1 WCS, with the ch4 field of view.
+6. Extract templates using regions defined in `regions/aper_T_DF_extraction.reg`, and `extract_templates` script.
+
+The goal is to have one of these scripts for each type of observation, so that
+all final pipeline products and derived products are created and packaged
+together automatically. Any Python code for these purposes, should be
+implemented in `pdrs4all/postprocess/`. It can then be called from these
+postprocessing shell scripts.
+
+A few examples of important things that still have to be implemented:
+- WCS corrections (needs to happen before template extraction, or maybe even
+  before cube\_build)
+- All extra imaging steps (wisp correction)
+
+### Extract templates description
+
+We provide a script that performs an aperture extraction, given a region files
+and a list of cubes. It also merges the spectral segments, and collects the
+results in a plain text table. To use it, the following is needed:
 1. A list of data cubes produced by the pipeline (can be the three NIRSpec
    cubes, the 12 MIRI cubes, or both sets)
 2. A single region file in the format as produced by DS9. All regions of
    interest should be in one file, in sky coordinates. Currently, only rectangle
-   regions are supported
+   regions are supported.
 
 The command is then for example
 
@@ -127,9 +168,9 @@ where the number of arguments for the optional `--template_names` should equal
 the number of regions in the `.reg` file. The output is a file called
 `templates.ecsv`, which can be loaded as an astropy table.
 
-See also the oneliner script in `shell_scripts`.
+See also the commands in postprocess\_mirifu.bash for a more detailed example
 
-## Current shell script content
+## Current pipeline script content
 
 ### NIRSpec IFU script overview
 
@@ -156,20 +197,6 @@ See also the oneliner script in `shell_scripts`.
 A basic script running the three stages is provided. Intermediate steps for
 astrometric correction, wisp removal, 1/f noise reduction, still have to be
 added.
-
-## Installation
-
-
-## Quick start
-
-1. Sort your data (see above)
-2. Copy the appropriate bash script from `shell_scripts/` to your working
-   directory
-3. Edit the copy of the script. Make sure to check the number of processes and
-   the CRDS context (pmap number `N`, `CRDS_PATH`, and `CRDS_SERVER_URL`).
-4. Activate the environment in which you installed this package (see
-   installation instructions above)
-5. Run `bash modified_script.bash`
 
 ## Credit
 
