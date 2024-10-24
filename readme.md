@@ -1,83 +1,68 @@
 # PDRs4All
 
-This repository is a collection of data reduction tools for [PDRs4All](https://pdrs4all.org). It is similar to [pdr_reduction](https://github.com/drvdputt/jwst-pdr-reduction), but has some different customizations and tools for specific derived products.
+This repository is a collection of data reduction tools for
+[PDRs4All](https://pdrs4all.org). It is a specialized version of
+[pdr_reduction](https://github.com/drvdputt/jwst-pdr-reduction), with some code
+that is specific for the Orion Bar observations. Some of the general
+improvements made here should be ported to pdr_reduction.
 
-Additional pipeline products, post-pipeline, include resolution-matched data
-cubes, merged cubes, stitched cubes, extracted template spectra.
+In addition to running the pipeline with our preferred settins, there are also
+tools to create resolution-matched data cubes, merged cubes, stitched cubes,
+extracted template spectra.
 
-## Pipeline workflow
+## Workflow Part 1: Running the pipeline
 
 PDRs4All consists of NIRCam imaging, MIRI imaging, NIRSpec IFU spectroscopy, and
-MIRI IFU spectroscopy. The steps for the reduction of each of these are briefly
-explained below, and a few shell scripts that implement these workflows are
-provided.
+MIRI IFU spectroscopy. For each of these observations, there is a shell script
+provided that performs the pipeline. These shell scripts are generally
+applicable (i.e. they should work out of the box for observations other than
+PDRs4All), if the following preparation steps are followed.
 
-### Manual steps
+### Preparing the data
 
-Before running these tools on your data, the `_uncal` files have to be sorted according  to
+First, sort the `_uncal` according to
 1. object
 2. instrument
-3. exposure type: science, background, and (for nirspec only) science imprint,
+3. exposure type: science, background, and (nirspec only) science imprint,
    background imprint.
+   
+Then, copy the appropriate shell script from the `shell_scripts` directory in
+this repository to your working directory (one level above the science and
+background directories). For example, your directory structure could look like
+this.
 
-The provided shell scripts can then be copied, and the paths set in them can be
-slightly modified to point to the directories containing the `_uncal` files. By
-default, the provided scripts assume that they are placed at the same level as
-the science, background, etc directories.
-
-- object 1
-  + nirspec
-    - `nirspec_script.bash`
-    - `science`
-    - `science_imprint`
-    - `background`
-    - `background_imprint`
-  + mirifu
-    - `mirifu_script.bash`
-    - `science`
-    - `background`
-- object 2
+- `object_1/`
+  + `nirspec/`
+    - `nirspec.bash`
+    - `science/ (*_uncal.fits files here)`
+    - `science_imprint/`
+    - `background/`
+    - `background_imprint/`
+  + `mirifu/`
+    - `mirifu.bash`
+    - `science/`
+    - `background/`
+  + `nircam/`
+    - `nircam.bash`
+    - `science/`
+    - `background/`
+- `object_2/`
   ...
+  
+To run the pipeline, one can simply use
+```bash
+cd object_1/mirifu/
+<activate python environment where pdrs4all is installed>
+bash mirifu.bash
+```
 
-Side note on the historical reason for this: To work around some issues with the
-default association files, we coded a simplified association generator. The
-files need to be sorted for this generator to work, as it uses glob within a
-directory.
+Note: The historical reason for this was to work around some issues with the
+default association files. We coded a simplified association generator which
+works by simply globbing all the files in the given directories, so it assumes
+that the files are sorted correctly, and does not actually apply any association
+rules. This manual approach has the advantage that it is fully predictable what
+products will processed and which will be used as a background etc.
 
-### NIRSpec IFU
-
-1. Stage 1 pipeline for `science, science_imprint, background,
-   background_imprint`
-2. 1/f noise reduction with NSclean (Rauscher, 2023arXiv230603250R), and custom
-   masks. TODO: adapt this so that the native NSclean in the pipeline is used.
-3. Stage 2 for `science, background`, with imprints used.
-4. Stage 3 with optional master background subtraction. The cube mosaic is
-   built. Outlier reduction parameters should be tweaked to recommended values
-   for NIRSpec.
-
-### MIRI IFU
-
-1. Stage 1 pipeline for `science, background`
-2. Stage 2 pipeline with optional image-to-image background subtraction
-3. Stage 3 pipeline with master background subtraction, if the stage 2
-   background was not performed.
-
-### Imaging
-
-Should be analogous. Although there are some intermediate steps which should be
-added.: alignment based on stellar catalogs, wisp removal, 1/f noise reduction.
-
-### Shell scripts
-
-See `shell_scripts/`. It is recommended to copy one of these to your working
-directory, and then modify the calls the `pipeline` script and extra cleaning
-tools as needed.
-
-Then run `bash script.bash` in the working directory where `science/` etc are
-located.
-
-TODO: add script that automatically renames and sorts files into the structure
-we set up for data releases.
 
 ## 1D merged spectrum extraction
 
@@ -101,6 +86,34 @@ the number of regions in the `.reg` file. The output is a file called
 `templates.ecsv`, which can be loaded as an astropy table.
 
 See also the oneliner script in `shell_scripts`.
+
+## Current shell script content
+
+### NIRSpec IFU script overview
+
+1. Stage 1 pipeline for `science, science_imprint, background,
+   background_imprint`
+2. 1/f noise reduction with NSclean (Rauscher, 2023arXiv230603250R), and custom
+   masks. TODO: use flicker noise step of detector1 pipeline instead.
+3. Stage 2 for `science, background`. Association files that include the NIRSpec
+   leakcal imprints (rate files) are created for this.
+4. Stage 3 with master background subtraction. Association files that include
+   the x1d background produces are created for this. Cube_build is disabled for
+   now, as it takes too much memory. See postprocessing step to build the cubes.
+
+### MIRI IFU script overview
+
+1. Stage 1 pipeline for `science, background`
+2. Stage 2 pipeline using association files that contain the background rate
+   files, to perform image-to-image background subtraction.
+3. Stage 3 pipeline using asssociation files, cubes are built per band (12 cubes
+   in total).
+
+### Status of imaging scripts
+
+A basic script running the three stages is provided. Intermediate steps for
+astrometric correction, wisp removal, 1/f noise reduction, still have to be
+added.
 
 ## Installation
 
