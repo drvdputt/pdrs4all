@@ -15,6 +15,7 @@ regions = ">=0.8"
 specutils = ">=1.13.0"
 pyqt6 = "^6.7.0"
 tqdm = "^4.66.5"
+photutils = "^2.0.1"
 
 [build-system]
 requires = ["poetry-core"]
