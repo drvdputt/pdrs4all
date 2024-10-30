@@ -48,9 +48,12 @@ do strun cube_build $ASN --output_dir cubes/ch1wcs --cube_pa=250.42338204969806 
 done
 
 # WCS correction needs to happen here
+python3 -m pdrs4all.postprocess.nirspec_wcs_calibrate_stitch cubes/default/*s3d.fits --output_dir cubes/default_wcscorr 
 
-# templates
+# templates from default cubes (no wcs corr)
 extract_templates "$ROOT"/regions/aper_T_DF_extraction.reg cubes/default/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1"
-mv templates.ecsv templates/templates_nostitch.ecsv
-extract_templates "$ROOT"/regions/aper_T_DF_extraction.reg cubes/default/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1" --apply_offsets --reference_segment 2
-mv templates.ecsv templates/templates_addstitch.ecsv
+mv templates.ecsv templates/default.ecsv
+
+# templates from wcs corrected cube
+extract_templates "$ROOT"/regions/aper_T_DF_extraction.reg cubes/default_wcscorr/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1" --apply_offsets --reference_segment 2
+mv templates.ecsv templates/default_wcscorr.ecsv
