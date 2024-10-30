@@ -1,1 +1,1 @@
-python ~/Repositories/pdrs4all/pdrs4all/extract_templates.py aper_T_DF_extraction.reg ~/BigData/orion/nirspec/1.15.0_1142/science/stage3/*s3d.fits  ~/BigData/orion/mirifu/1.15.0_1252/science/stage3/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1"
+extract_templates ~/Repositories/pdrs4all/regions/aper_T_DF_extraction.reg cubes/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1"
