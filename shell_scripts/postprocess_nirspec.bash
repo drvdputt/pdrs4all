@@ -35,7 +35,7 @@ create_association F100LP_crf crf/jw01288003001_0312?_*crf.fits
 create_association F170LP_crf crf/jw01288003001_0311?_*crf.fits
 create_association F290LP_crf crf/jw01288003001_0310?_*crf.fits
 
-# Default resolution cubes
+# Default resolution cubes (but with custom PA to optimize cube size)
 mkdir -p cubes/default
 for ASN in F???LP_crf_asn.json
 do strun cube_build $ASN --output_dir cubes/default --cube_pa=250.42338204969806
