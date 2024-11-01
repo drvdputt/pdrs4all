@@ -35,7 +35,7 @@ create_association F100LP_crf crf/jw01288003001_0312?_*crf.fits
 create_association F170LP_crf crf/jw01288003001_0311?_*crf.fits
 create_association F290LP_crf crf/jw01288003001_0310?_*crf.fits
 
-# Default resolution cubes
+# Default resolution cubes (but with custom PA to optimize cube size)
 mkdir -p cubes/default
 for ASN in F???LP_crf_asn.json
 do strun cube_build $ASN --output_dir cubes/default --cube_pa=250.42338204969806
@@ -48,9 +48,10 @@ do strun cube_build $ASN --output_dir cubes/ch1wcs --cube_pa=250.42338204969806 
 done
 
 # WCS correction needs to happen here
+python3 -m pdrs4all.postprocess.nirspec_wcs_calibrate_stitch cubes/default/*s3d.fits --output_dir cubes/default_wcscorr
 
-# templates
-extract_templates "$ROOT"/regions/aper_T_DF_extraction.reg cubes/default/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1"
-mv templates.ecsv templates/templates_nostitch.ecsv
-extract_templates "$ROOT"/regions/aper_T_DF_extraction.reg cubes/default/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1" --apply_offsets --reference_segment 2
-mv templates.ecsv templates/templates_addstitch.ecsv
+# templates from default cubes (no wcs corr)
+extract_templates "$ROOT"/regions/aper_T_DF_extraction.reg cubes/default/*s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1" -o templates/default.ecsv
+
+# templates from wcs corrected cube
+extract_templates "$ROOT"/regions/aper_T_DF_extraction.reg cubes/default_wcscorr/nirspec_naive_stitch_wcscorr_s3d.fits --template_names "HII" "Atomic" "DF3" "DF2" "DF1" -o templates/default_wcscorr.ecsv

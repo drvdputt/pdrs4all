@@ -44,6 +44,11 @@ def main():
         region file. E.g. "HII", "Atomic", "DF3", "DF2", "DF1" for the Orion
         templates.""",
     )
+    ap.add_argument(
+        "-o",
+        help="Output file. Recommended format is ECSV.",
+        default="templates.ecsv",
+    )
     args = ap.parse_args()
 
     # load the cubes and WCS. Need to load WCS here, as using
@@ -54,7 +59,7 @@ def main():
         cubes.append(Spectrum1D.read(cf, format="JWST s3d"))
         with fits.open(cf) as hdulist:
             # need both header and fobj arguments for WAVE-TAB cube it seems
-            wcs = WCS(header=hdulist['SCI'], fobj=hdulist)
+            wcs = WCS(header=hdulist["SCI"], fobj=hdulist)
             celestial_wcss.append(wcs.celestial)
 
     # set up template apertures and names
@@ -69,7 +74,9 @@ def main():
 
     # extract for each region
     templates_spec1d = [
-        extract_and_merge(cubes, celestial_wcss, a, args.apply_offsets, args.reference_segment)
+        extract_and_merge(
+            cubes, celestial_wcss, a, args.apply_offsets, args.reference_segment
+        )
         for a in regions
     ]
 
@@ -84,19 +91,24 @@ def main():
     t.meta["cubes"] = args.cube_files
 
     # write
-    fname = "templates.ecsv"
+    fname = args.o
     print(f"Writing extracted spectra to {fname}")
     t.write(fname, overwrite=True)
 
 
 # define this local utility function
-def extract_and_merge(cubes, celestial_wcss, aperture, apply_offsets, offset_reference=0):
+def extract_and_merge(
+    cubes, celestial_wcss, aperture, apply_offsets, offset_reference=0
+):
     """Steps that need to happen for every aperture.
 
     1. extract from every given cube
     2. apply stitching corrections
     3. return a single merged spectrum"""
-    specs = [cube_sky_aperture_extraction_v3(s, aperture, wcs_2d=cwcs) for s, cwcs in zip(cubes, celestial_wcss)]
+    specs = [
+        cube_sky_aperture_extraction_v3(s, aperture, wcs_2d=cwcs)
+        for s, cwcs in zip(cubes, celestial_wcss)
+    ]
     specs = spectral_segments.sort(specs)
 
     if apply_offsets:
