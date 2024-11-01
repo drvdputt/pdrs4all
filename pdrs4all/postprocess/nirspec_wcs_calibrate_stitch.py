@@ -64,10 +64,10 @@ def main(args):
     output_path.mkdir(exist_ok=True)
 
     # names for the various outputs (and sometimes re-read as inputs)
-    naive_stitch_fits = output_path / "nirspec_naive_stitch.fits"
+    naive_stitch_fits = output_path / "nirspec_naive_stitch_s3d.fits"
     synth_fits = output_path / "nirspec_synth.fits"
     synth_unc_fits = output_path / "nirspec_synth_unc.fits"
-    naive_stitch_wcscorr_fits = output_path / "nirspec_naive_stitch_wcscorr.fits"
+    naive_stitch_wcscorr_fits = output_path / "nirspec_naive_stitch_wcscorr_s3d.fits"
 
     print("Step 0: load cubes and make naive stitched cube")
     s3ds = [Spectrum1D.read(fn) for fn in args.nirspec_cubes]
