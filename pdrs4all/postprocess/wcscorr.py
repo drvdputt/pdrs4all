@@ -10,9 +10,7 @@ from photutils.segmentation import detect_sources, SourceCatalog, deblend_source
 C_PROPLYD_NIRSPEC = SkyCoord(
     83.83447199597 * u.deg, -5.41778904231 * u.deg, frame="icrs"
 )
-C_OTHER_PROPLYD_MRS = SkyCoord(
-    83.83447199597 * u.deg, -5.41778904231 * u.deg, frame="icrs"
-)
+C_OTHER_PROPLYD_MRS = SkyCoord(83.8344330 * u.deg, -5.4177539 * u.deg, frame="icrs")
 
 
 def apply_delta_ra_dec_to_wcs(current_wcs, delta_ra_dec):
@@ -37,13 +35,23 @@ def apply_delta_ra_dec_to_wcs(current_wcs, delta_ra_dec):
     return w_new
 
 
-def delta_ra_dec_photometry_vs_ref_coord(c_true, reference_image, current_wcs):
-    """Slightly more general. See nirspec version for explanation.
+def xc_yc_using_photometry_and_ref_coord(c_true, reference_image, current_wcs):
+    """I split up some functionalities. See nirspec version for
+    explanation of full workflow.
 
     Returns: dra, ddec
         Spherical offsets in RA and Dec units (check unit of the
-        returned astropy quantity)"""
+        returned astropy quantity)
+
+    """
     npixels = 5
+
+    print(
+        "local maximum is at",
+        np.unravel_index(
+            np.argmax(reference_image, keepdims=True), reference_image.shape
+        ),
+    )
 
     # photutils source identification
     bkg_estimator = MedianBackground()
@@ -69,29 +77,62 @@ def delta_ra_dec_photometry_vs_ref_coord(c_true, reference_image, current_wcs):
     tbl = cat.to_table()
 
     print("Found the following sources using photutils")
-    print(tbl)
+    tbl.pprint(max_lines=-1, max_width=-1)
 
     good_tbl_rows = np.isfinite(tbl["xcentroid"]) & np.isfinite(tbl["ycentroid"])
     tbl = tbl[good_tbl_rows]
 
-    n_apertures = len(tbl)
-    sep = np.zeros(n_apertures)
     xc = tbl["xcentroid"]
     yc = tbl["ycentroid"]
-
     c_measured = SkyCoord.from_pixel(xc, yc, wcs=current_wcs, origin=0)
     sep = c_measured.separation(c_true).deg
 
-    # Pixel indices of closest peak
     i_min = np.argmin(sep)
     xmin, ymin = xc[i_min], yc[i_min]
-    sepmin = sep[i_min]
     print("Distance of measured peak to true coordinate.")
-    print(f"xmin, ymin, sep = {xmin:.4f}, {ymin:.4f}, {sepmin * 3600.:.4f} arcsec")
+    print(f"xmin, ymin, sep = {xmin:.4f}, {ymin:.4f}, {sep[i_min] * 3600.:.4f} arcsec")
+
+    return xmin, ymin
+
+
+def xc_yc_using_argmax_and_centroid(reference_image):
+    """This works particularly well for MIRI ch1"""
+    xmax, ymax = np.unravel_index(np.argmax(reference_image), reference_image.shape)
+
+    window = 4
+    try:
+        cutout = reference_image.value[
+            xmax - window : xmax + window + 1, ymax - window : ymax + window + 1
+        ]
+    except Exception as e:
+        print("Window for centroid determination out of bounds.")
+        raise e
+
+    grid_local = range(-window, window + 1)
+    X, Y = np.meshgrid(grid_local, grid_local)
+
+    # centroid position relative to center of the NxN cutout (can be
+    # negative)
+    norm = np.sum(cutout)
+    xc_local = np.average(X * cutout) / norm
+    yc_local = np.average(Y * cutout) / norm
+    print("local centroid position on cutout", xc_local, yc_local)
+
+    # convert back to absolute coordinates
+    xc = xmax + xc_local
+    yc = ymax + yc_local
+    print("final xc, yc using argmax and centroid is", xc, yc)
+    return xc, yc
+
+
+def delta_ra_dec_pixel_vs_ref_coord(c_true, xc, yc, current_wcs):
+    """Determine RA and Dec offsets using reference coordinate, measured
+    location in x and y, and WCS."""
     # Calculate offsets in RA and DEC needed to bring measured
     # center to the true center
-    dra, ddec = c_measured[i_min].spherical_offsets_to(c_true)
-    print(dra, ddec)
+    c_measured = SkyCoord.from_pixel(xc, yc, wcs=current_wcs, origin=0)
+    dra, ddec = c_measured.spherical_offsets_to(c_true)
+    print("Delta RA Dec", (dra, ddec))
     return dra, ddec
 
 
@@ -137,9 +178,10 @@ def nirspec_wcscorr_using_proplyd(reference_image, current_wcs):
         synthetic images.
 
     """
-    dra, ddec = delta_ra_dec_photometry_vs_ref_coord(
-        reference_image, C_PROPLYD_NIRSPEC, current_wcs
+    xc, yc = xc_yc_using_photometry_and_ref_coord(
+        C_PROPLYD_NIRSPEC, reference_image, current_wcs
     )
+    dra, ddec = delta_ra_dec_pixel_vs_ref_coord(C_PROPLYD_NIRSPEC, xc, yc, current_wcs)
     return apply_delta_ra_dec_to_wcs(current_wcs, dra, ddec)
 
 
@@ -167,10 +209,19 @@ def mrs_wcscorr_using_proplyd(images, current_wcss):
     ref_wcss = current_wcss[:3]
 
     # calculate offsets for A, B, and C
-    delta_ra_dec_abc = [
-        delta_ra_dec_photometry_vs_ref_coord(C_OTHER_PROPLYD_MRS, ref_im, wcs)
-        for ref_im, wcs in zip(ref_images, ref_wcss)
-    ]
+    delta_ra_dec_abc = []
+    for abc in range(3):
+        # very simple method to determine peak: just the maximum for
+        # now. Let's see how well it works.
+        xc, yc = xc_yc_using_argmax_and_centroid(ref_images[abc])
+        print("Maximum pixel is", xc, yc)
+
+        delta_ra_dec = delta_ra_dec_pixel_vs_ref_coord(
+            C_OTHER_PROPLYD_MRS, xc, yc, ref_wcss[abc]
+        )
+        delta_ra_dec_abc.append(delta_ra_dec)
+
+    print("offsets to be applied are", delta_ra_dec_abc)
 
     # to the 12 bands, apply the offsets as 0 1 2, 0 1 2, ...
     new_wcss = []
