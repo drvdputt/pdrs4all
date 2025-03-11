@@ -73,12 +73,14 @@ def main():
         template_names = args.template_names
 
     # extract for each region
-    templates_spec1d = [
-        extract_and_merge(
-            cubes, celestial_wcss, a, args.apply_offsets, args.reference_segment
+    templates_spec1d = []
+    segments_for_each = []
+    for r in regions:
+        merged_spec1d, segments = extract_and_merge(
+            cubes, celestial_wcss, r, args.apply_offsets, args.reference_segment
         )
-        for a in regions
-    ]
+        templates_spec1d.append(merged_spec1d)
+        segments_for_each.append(segments)
 
     # use names and spectra to make table
     t = make_templates_table(template_names, templates_spec1d)
@@ -95,6 +97,14 @@ def main():
     print(f"Writing extracted spectra to {fname}")
     t.write(fname, overwrite=True)
 
+    # if requested, write out the individual segments
+    if args.save_segments:
+        for i in range(len(cubes)):
+            # for every segment, create a table which contains all apertures
+            segment_i_for_each = [ss[i] for ss in segments_for_each]
+            t_i = make_templates_table(template_names, segment_i_for_each)
+            t_i.write(fname.replace(".ecsv", f"_segment{i}.ecsv"), overwrite=True)
+
 
 # define this local utility function
 def extract_and_merge(
@@ -104,7 +114,8 @@ def extract_and_merge(
 
     1. extract from every given cube
     2. apply stitching corrections
-    3. return a single merged spectrum"""
+    3. return a single merged spectrum + individual extracted parts (before offsets were applied)
+    """
     specs = [
         cube_sky_aperture_extraction_v3(s, aperture, wcs_2d=cwcs)
         for s, cwcs in zip(cubes, celestial_wcss)
@@ -119,7 +130,7 @@ def extract_and_merge(
     else:
         specs_to_merge = specs
 
-    return spectral_segments.merge_1d(specs_to_merge)
+    return spectral_segments.merge_1d(specs_to_merge), specs
 
 
 def make_templates_table(keys, spec1ds):

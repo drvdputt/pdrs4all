@@ -9,13 +9,15 @@ from astropy.table import Table
 from argparse import ArgumentParser
 from matplotlib import pyplot as plt
 
+COLORS = ["b", "orange", "g", "r", "m"]
 
-def flux_and_snr(ax_f, ax_u, ax_snr, w, f, u, label=None):
-    ax_f.plot(w, f, label=label)
+
+def flux_and_snr(ax_f, ax_u, ax_snr, w, f, u, **plot_kwargs):
+    ax_f.plot(w, f, **plot_kwargs)
     ax_f.set_ylabel("flux (MJy sr-1)")
-    ax_u.plot(w, u, label=label)
+    ax_u.plot(w, u, **plot_kwargs)
     ax_f.set_ylabel("unc (MJy sr-1)")
-    ax_snr.plot(w, f / u, label=label)
+    ax_snr.plot(w, f / u, **plot_kwargs)
     ax_snr.set_ylabel("S/N")
 
     for ax in (ax_f, ax_u, ax_snr):
@@ -29,7 +31,16 @@ if __name__ == "__main__":
     ap.add_argument("-o", help="output file for plot", default="templates.pdf")
     ap.add_argument(
         "--compare",
-        help="another templates.ecsv file to compare with (not implemented yet)",
+        help="""
+    Another templates.ecsv file to compare with (not implemented
+    yet)""",
+    )
+    ap.add_argument(
+        "--segments_ecsv",
+        nargs="+",
+        help="""
+    Files containing extractions for individual cubes. These segments
+    will be plotted to inspect how well the stitching works.""",
     )
     args = ap.parse_args()
 
@@ -40,11 +51,30 @@ if __name__ == "__main__":
 
     fig, axs = plt.subplots(3, 1, sharex=True)
     wavelength = t["wavelength"]
-    for k in suffixes:
+    for i, k in enumerate(suffixes):
         flux = t[f"flux_{k}"]
         unc = t[f"unc_{k}"]
+        flux_and_snr(
+            axs[0], axs[1], axs[2], wavelength, flux, unc, label=k, color=COLORS[i]
+        )
 
-        flux_and_snr(axs[0], axs[1], axs[2], wavelength, flux, unc, label=k)
+    if args.segments_ecsv is not None:
+        for t_segment in (Table.read(fn) for fn in args.segments_ecsv):
+            wavelength = t_segment["wavelength"]
+            for i, k in enumerate(suffixes):
+                flux = t_segment[f"flux_{k}"]
+                unc = t_segment[f"unc_{k}"]
+                flux_and_snr(
+                    axs[0],
+                    axs[1],
+                    axs[2],
+                    wavelength,
+                    flux,
+                    unc,
+                    label=k,
+                    color=COLORS[i],
+                    alpha=0.33,
+                )
 
     axs[0].legend()
     # for ax in axs:
@@ -56,4 +86,4 @@ if __name__ == "__main__":
     if args.interactive:
         plt.show()
     else:
-        fig.savefig("templates.pdf")
+        fig.savefig(args.o)
