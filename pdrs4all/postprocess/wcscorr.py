@@ -98,8 +98,9 @@ def xc_yc_using_photometry_and_ref_coord(c_true, reference_image, current_wcs):
 def xc_yc_using_argmax_and_centroid(reference_image):
     """This works particularly well for MIRI ch1"""
     xmax, ymax = np.unravel_index(np.argmax(reference_image), reference_image.shape)
+    print("Maximum pixel ", xmax, ymax)
 
-    window = 4
+    window = 3
     try:
         cutout = reference_image.value[
             xmax - window : xmax + window + 1, ymax - window : ymax + window + 1
@@ -214,7 +215,6 @@ def mrs_wcscorr_using_proplyd(images, current_wcss):
         # very simple method to determine peak: just the maximum for
         # now. Let's see how well it works.
         xc, yc = xc_yc_using_argmax_and_centroid(ref_images[abc])
-        print("Maximum pixel is", xc, yc)
 
         delta_ra_dec = delta_ra_dec_pixel_vs_ref_coord(
             C_OTHER_PROPLYD_MRS, xc, yc, ref_wcss[abc]

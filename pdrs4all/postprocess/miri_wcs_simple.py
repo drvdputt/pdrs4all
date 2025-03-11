@@ -4,6 +4,7 @@ from specutils import Spectrum1D
 from astropy.wcs import WCS
 from pdrs4all.postprocess import custom_io, wcscorr
 
+
 def main():
     ap = ArgumentParser()
     ap.add_argument(
@@ -13,6 +14,7 @@ def main():
     )
     ap.add_argument("--output_dir", default="./")
     args = ap.parse_args()
+    input_path = Path(args.miri_cubes[0]).parent
     output_path = Path(args.output_dir)
     output_path.mkdir(exist_ok=True)
 
@@ -30,8 +32,8 @@ def main():
     # collapse cubes along wavelength direction. (Not sure what the unit
     # of this is. Proper way would be to convert flux from MJy/sr to a
     # per-wavelength unit, then integrate)
-    images = [s.collapse('sum', axis='spectral') for s in s3ds]
-    
+    images = [s.collapse("sum", axis="spectral") for s in s3ds]
+
     print("Writing collapsed MRS cubes to image files")
     for i in range(len(images)):
         custom_io.write_i2d(f"mrs_collapsed{i}.fits", images[i], cwcss[i])
@@ -45,7 +47,13 @@ def main():
     print("Writing wcs corrected images as test")
     for i in range(len(images)):
         custom_io.write_i2d(f"mrs_collapsed{i}_wcscorr.fits", images[i], new_cwcss[i])
-    
+
+    for i in range(len(s3ds)):
+        original_fn = s3ds[i].meta['header']['FILENAME']
+        output_fn = original_fn.replace("_s3d", "_wcscorr_s3d")
+        new_crval = new_cwcss[i].wcs.crval
+        custom_io.write_s3d_with_new_crval(output_path / output_fn, input_path / original_fn, new_crval)
+
+
 if __name__ == "__main__":
     main()
-    
