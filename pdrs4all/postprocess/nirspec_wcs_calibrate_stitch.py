@@ -40,7 +40,7 @@ that I need.
 
 from specutils import Spectrum1D
 from argparse import ArgumentParser
-from pdrs4all.postprocess import spectral_segments, write_cube, synth, wcscorr
+from pdrs4all.postprocess import spectral_segments, custom_io, synth, wcscorr
 from astropy.wcs import WCS
 from astropy.io import fits
 from pathlib import Path
@@ -76,7 +76,7 @@ def main(args):
     nirspec_cwcs = WCS(s3ds[0].meta["header"]).celestial
 
     s3dm = spectral_segments.merge_nd_memfriendly(s3ds)
-    write_cube.write_cube_s1d_wavetab_jwst_s3d_format(
+    custom_io.write_cube_s1d_wavetab_jwst_s3d_format(
         naive_stitch_fits, s3dm, nirspec_cwcs
     )
 

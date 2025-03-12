@@ -2,7 +2,7 @@ from specutils import Spectrum1D
 from astropy.wcs import WCS
 from argparse import ArgumentParser
 from pdrs4all.postprocess.spectral_segments import merge_nd, merge_nd_memfriendly
-from pdrs4all.postprocess.write_cube import write_cube_s1d_wavetab_jwst_s3d_format
+from pdrs4all.postprocess.custom_io import write_cube_s1d_wavetab_jwst_s3d_format
 
 if __name__ == "__main__":
     ap = ArgumentParser(
