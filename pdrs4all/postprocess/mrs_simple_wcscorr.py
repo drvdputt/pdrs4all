@@ -49,10 +49,12 @@ def main():
         custom_io.write_i2d(f"mrs_collapsed{i}_wcscorr.fits", images[i], new_cwcss[i])
 
     for i in range(len(s3ds)):
-        original_fn = s3ds[i].meta['header']['FILENAME']
+        original_fn = s3ds[i].meta["header"]["FILENAME"]
         output_fn = original_fn.replace("_s3d", "_wcscorr_s3d")
         new_crval = new_cwcss[i].wcs.crval
-        custom_io.write_s3d_with_new_crval(output_path / output_fn, input_path / original_fn, new_crval)
+        custom_io.write_s3d_with_new_crval(
+            output_path / output_fn, input_path / original_fn, new_crval
+        )
 
 
 if __name__ == "__main__":

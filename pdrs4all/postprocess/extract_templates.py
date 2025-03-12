@@ -49,6 +49,11 @@ def main():
         help="Output file. Recommended format is ECSV.",
         default="templates.ecsv",
     )
+    ap.add_argument(
+        "--save_segments",
+        action="store_true",
+        help="""Save extractions from individual cubes (for plotting)"""
+    )
     args = ap.parse_args()
 
     # load the cubes and WCS. Need to load WCS here, as using
