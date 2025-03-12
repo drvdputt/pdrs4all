@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 import numpy as np
 from matplotlib import ticker
 
+
 def main():
     ap = ArgumentParser()
     ap.add_argument("templates1")
@@ -26,10 +27,11 @@ def main():
         compare_one_template(t1, t2, args.label1, args.label2, k)
 
     plt.show()
-        
+
+
 def compare_one_template(t1, t2, label1, label2, k):
     """
-pn    Parameters
+    Parameters
     ----------
 
     t1: Table
@@ -53,20 +55,23 @@ pn    Parameters
     axs[0].plot(w2, f2, label=label2)
 
     residual = (f2 - f1) / (0.5 * (f1 + f2))
-    axs[1].plot(w1, residual, color="k")
-    axs[1].set_ylabel("(orange - blue) / (0.5 * (orange + blue))")
+    axs[1].plot(w1, residual * 100, color="k")
+    axs[1].set_ylabel("(orange - blue) / (0.5 * (orange + blue)) [percent]", ha="left")
 
     axs[0].set_title(k)
     axs[0].legend()
 
-    axs[0].set_xscale('log')
-    axs[0].set_yscale('log')
+    axs[0].set_xscale("log")
+    axs[0].set_yscale("log")
     axs[0].set_xticks(list(range(1, 16)) + [16, 18, 20, 24, 28])
-    axs[0].set_xticks([i + 0.5 for i in range(1,15)], minor=True)
+    axs[0].set_xticks([i + 0.5 for i in range(1, 15)], minor=True)
     axs[0].set_xlim(np.amin(w1), np.amax(w2))
     axs[0].xaxis.set_minor_formatter(ticker.NullFormatter())
     axs[0].xaxis.set_major_formatter(ticker.ScalarFormatter())
-    axs[1].tick_params(which='minor', left=True)
+
+    axs[1].set_yscale("asinh")
+    axs[1].tick_params(which="minor", left=True)
+
 
 if __name__ == "__main__":
     main()
