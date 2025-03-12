@@ -10,31 +10,6 @@ DEFAULT_MIN_THROUGHPUT = 1.0e-3  # 1e-4  # 5e-2
 DEFAULT_MIN_COVERAGE = 0.95  # 1.
 
 
-def get_wave(fits_file):
-    """
-    Gets wavelength array from JWST fits file.
-    Inputs:
-    -------
-    fits_file: 3D JWST Spectral cube with header.
-
-    Outputs:
-    -------
-    wave_array : array with wavelenghts of the cube
-    """
-    # primary_hdr = fits.getheader(fits_file, "PRIMARY")
-    science_hdr = fits.getheader(fits_file, "SCI")
-
-    lambda0 = science_hdr["CRVAL3"] - science_hdr["CDELT3"] * (
-        science_hdr["CRPIX3"] - 1
-    )
-    lambdas = np.arange(
-        lambda0,
-        lambda0 + (science_hdr["NAXIS3"] - 0.1) * science_hdr["CDELT3"],
-        science_hdr["CDELT3"],
-    )
-    return lambdas
-
-
 def compute_colorcor(wave, bandpass, flux_ref, wave_ref, flux_source):
     """
     Compute the color correction K given the bandpass, reference spectrum,
